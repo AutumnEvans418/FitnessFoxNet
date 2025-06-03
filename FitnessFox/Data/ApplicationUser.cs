@@ -6,5 +6,4 @@ namespace FitnessFox.Data
     public class ApplicationUser : IdentityUser
     {
     }
-
 }
