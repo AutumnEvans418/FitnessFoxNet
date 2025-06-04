@@ -2,73 +2,31 @@
 
 @inject NavigationManager NavigationManager
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">FitnessFox</a>
-    </div>
-</div>
+<MudNavMenu>
+    <MudNavLink Icon="@Icons.Material.Filled.Home" Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
+    <MudNavLink Icon="@Icons.Material.Filled.PlusOne" Href="counter" Match="NavLinkMatch.All">Counter</MudNavLink>
+    <MudNavLink Icon="@Icons.Material.Filled.Cloud" Href="weather" Match="NavLinkMatch.All">Weather</MudNavLink>
+    <MudNavLink Icon="@Icons.Material.Filled.Key" Href="auth" Match="NavLinkMatch.All">Auth Required</MudNavLink>
+    <AuthorizeView>
+        <Authorized>
+            <MudNavLink Icon="@Icons.Material.Filled.Person2" Href="Account/Manage" Match="NavLinkMatch.All">@context.User.Identity?.Name</MudNavLink>
+            
+            <div class="mud-nav-item"> 
+                <form action="Account/Logout" method="post">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                    <MudButton StartIcon="@Icons.Material.Filled.ArrowLeft" ButtonType="ButtonType.Submit">Logout</MudButton>
+                    
+                </form>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <MudNavLink Icon="@Icons.Material.Filled.Person2" Href="Account/Register" Match="NavLinkMatch.All">Register</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.Person" Href="Account/Login" Match="NavLinkMatch.All">Login</MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
-            </NavLink>
-        </div>
-
-        <AuthorizeView>
-            <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Manage">
-                        <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> @context.User.Identity?.Name
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <form action="Account/Logout" method="post">
-                        <AntiforgeryToken />
-                        <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                        <button type="submit" class="nav-link">
-                            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                        </button>
-                    </form>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
-    </nav>
-</div>
-
+</MudNavMenu>
 @code {
     private string? currentUrl;
 

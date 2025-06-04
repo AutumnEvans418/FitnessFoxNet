@@ -1,7 +1,159 @@
 ﻿@page "/"
+@using FitnessFox.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@attribute [Authorize]
+@inject ApplicationDbContext dbContext
+@inject AuthenticationStateProvider stateProvider
+@inject ISnackbar Snackbar
 
 <PageTitle>Home</PageTitle>
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
+            <MudText Typo="Typo.h6">Current Date</MudText>
+            <MudStack Row=true>
+                <MudIconButton OnClick="() => SetDate(CurrentDate?.AddDays(-1))" Icon="@Icons.Material.Filled.ArrowLeft"></MudIconButton>
+                <MudDatePicker @bind-Date="CurrentDate" @bind-Date:after="Refresh"></MudDatePicker>
+                <MudIconButton OnClick="() => SetDate(CurrentDate?.AddDays(1))" Icon="@Icons.Material.Filled.ArrowRight"></MudIconButton>
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+            <MudText Typo="Typo.h6">Weight</MudText>
+            <MudNumericField T="float" @bind-Value="Weight.Value" Label="Weight"></MudNumericField>
+            <MudTextField T="string" @bind-Value="Weight.Notes" Label="Notes"></MudTextField>
+            <MudButton Class="mt-2" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Save(Weight)">Save</MudButton>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+            <MudText Typo="Typo.h6">Blood</MudText>
+            <MudStack Row=true>
+                <MudNumericField T="float" @bind-Value="Systolic.Value" Label="Systolic"></MudNumericField>
+                <MudNumericField T="float" @bind-Value="Diastolic.Value" Label="Diastolic"></MudNumericField>
+                <MudNumericField T="float" @bind-Value="Bpm.Value" Label="Bpm"></MudNumericField>
+            </MudStack>
+            <MudTextField T="string" @bind-Value="Systolic.Notes" Label="Notes"></MudTextField>
+            <MudButton Class="mt-2" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Save(Systolic, Diastolic, Bpm)">Save</MudButton>
 
-<h1>Hello, world!</h1>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+            <MudText Typo="Typo.h6">Temperature</MudText>
+            <MudNumericField T="float" @bind-Value="Temperature.Value" Label="Temp"></MudNumericField>
+            <MudTextField T="string" @bind-Value="Temperature.Notes" Label="Notes"></MudTextField>
+            <MudButton Class="mt-2" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Save(Temperature)">Save</MudButton>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+            <MudText Typo="Typo.h6">Water</MudText>
+            <MudNumericField T="float" @bind-Value="Water.Value" Label="Water (fl ounces)"></MudNumericField>
+            <MudTextField T="string" @bind-Value="Water.Notes" Label="Notes"></MudTextField>
+            <MudButton Class="mt-2" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Save(Water)">Save</MudButton>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            </MudItem>
+            <MudItem xs="12">
+                <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem xs="12" sm="6">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 100%"></MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="4">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+    </MudItem>
+</MudGrid>
 
-Welcome to your new app.
+@code {
+    public DateTime? CurrentDate { get; set; } = DateTime.Now;
+
+    public List<UserVital> Vitals { get; set; } = new();
+
+    public UserVital Weight { get; set; } = new();
+    public UserVital Systolic { get; set; } = new();
+    public UserVital Diastolic { get; set; } = new();
+    public UserVital Bpm { get; set; } = new();
+    public UserVital Temperature { get; set; } = new();
+    public UserVital Water { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Refresh();
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public async Task Refresh()
+    {
+        var user = await stateProvider.GetAuthenticationStateAsync();
+
+        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+            return;
+
+        Vitals = await dbContext.UserVitals
+            .Where(u => u.User.Id == userId)
+            .Where(u => u.DateCreated.Date == CurrentDate.GetValueOrDefault().Date)
+            .ToListAsync();
+
+        UserVital getType(UserVitalType type)
+        {
+            return Vitals.FirstOrDefault(v => v.Type == type) ?? new()
+            {
+                UserId = userId,
+                Type = type,
+            };
+        }
+
+        Weight = getType(UserVitalType.Weight);
+        Systolic = getType(UserVitalType.Systolic);
+        Diastolic = getType(UserVitalType.Diastolic);
+        Bpm = getType(UserVitalType.Bpm);
+        Temperature = getType(UserVitalType.Temperature);
+        Water = getType(UserVitalType.Water);
+
+        StateHasChanged();
+    }
+
+    public async Task SetDate(DateTime? date)
+    {
+        CurrentDate = date;
+        await Refresh();
+    }
+
+    public async Task Save(params UserVital[] vitals)
+    {
+        foreach (var item in vitals)
+        {
+            dbContext.Update(item);
+        }
+        await dbContext.SaveChangesAsync();
+        Snackbar.Add("Saved");
+        StateHasChanged();
+    }
+
+}
