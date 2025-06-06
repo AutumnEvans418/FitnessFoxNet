@@ -4,9 +4,7 @@
 
 <MudNavMenu>
     <MudNavLink Icon="@Icons.Material.Filled.Home" Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
-    <MudNavLink Icon="@Icons.Material.Filled.PlusOne" Href="counter" Match="NavLinkMatch.All">Counter</MudNavLink>
-    <MudNavLink Icon="@Icons.Material.Filled.Cloud" Href="weather" Match="NavLinkMatch.All">Weather</MudNavLink>
-    <MudNavLink Icon="@Icons.Material.Filled.Key" Href="auth" Match="NavLinkMatch.All">Auth Required</MudNavLink>
+    <MudNavLink Icon="@Icons.Material.Filled.Assignment" Href="/goals" Match="NavLinkMatch.All">Goals</MudNavLink>
     <AuthorizeView>
         <Authorized>
             <MudNavLink Icon="@Icons.Material.Filled.Person2" Href="Account/Manage" Match="NavLinkMatch.All">@context.User.Identity?.Name</MudNavLink>
