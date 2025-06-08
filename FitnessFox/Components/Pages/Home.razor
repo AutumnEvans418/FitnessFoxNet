@@ -21,66 +21,42 @@
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+        <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Weight</MudText>
-            <MudNumericField T="float" @bind-Value="Weight.Value" Label="Weight"></MudNumericField>
-            <MudTextField T="string" @bind-Value="Weight.Notes" Label="Notes"></MudTextField>
-            <MudButton Class="mt-2" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Save(Weight)">Save</MudButton>
+            <MudNumericField T="float" @bind-Value="Weight.Value" @bind-Value:after="() => Save(Weight)" Label="Weight"></MudNumericField>
+            <MudTextField T="string" @bind-Value="Weight.Notes" @bind-Value:after="() => Save(Weight)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+        <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Blood</MudText>
             <MudStack Row=true>
-                <MudNumericField T="float" @bind-Value="Systolic.Value" Label="Systolic"></MudNumericField>
-                <MudNumericField T="float" @bind-Value="Diastolic.Value" Label="Diastolic"></MudNumericField>
-                <MudNumericField T="float" @bind-Value="Bpm.Value" Label="Bpm"></MudNumericField>
+                <MudNumericField T="float" @bind-Value="Systolic.Value" @bind-Value:after="() => Save(Systolic)" Label="Systolic"></MudNumericField>
+                <MudNumericField T="float" @bind-Value="Diastolic.Value" @bind-Value:after="() => Save(Diastolic)" Label="Diastolic"></MudNumericField>
+                <MudNumericField T="float" @bind-Value="Bpm.Value" @bind-Value:after="() => Save(Bpm)" Label="Bpm"></MudNumericField>
             </MudStack>
-            <MudTextField T="string" @bind-Value="Systolic.Notes" Label="Notes"></MudTextField>
-            <MudButton Class="mt-2" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Save(Systolic, Diastolic, Bpm)">Save</MudButton>
-
+            <MudTextField T="string" @bind-Value="Systolic.Notes" @bind-Value:after="() => Save(Systolic)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+        <MudPaper Elevation="2" Class="pa-4" >
             <MudText Typo="Typo.h6">Temperature</MudText>
-            <MudNumericField T="float" @bind-Value="Temperature.Value" Label="Temp"></MudNumericField>
-            <MudTextField T="string" @bind-Value="Temperature.Notes" Label="Notes"></MudTextField>
-            <MudButton Class="mt-2" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Save(Temperature)">Save</MudButton>
+            <MudNumericField T="float" @bind-Value="Temperature.Value" @bind-Value:after="() => Save(Temperature)" Label="Temp"></MudNumericField>
+            <MudTextField T="string" @bind-Value="Temperature.Notes" @bind-Value:after="() => Save(Temperature)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;">
+        <MudPaper Elevation="2" Class="pa-4" >
             <MudText Typo="Typo.h6">Water</MudText>
-            <MudNumericField T="float" @bind-Value="Water.Value" Label="Water (fl ounces)"></MudNumericField>
-            <MudTextField T="string" @bind-Value="Water.Notes" Label="Notes"></MudTextField>
-            <MudButton Class="mt-2" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => Save(Water)">Save</MudButton>
+            <MudNumericField T="float" @bind-Value="Water.Value" @bind-Value:after="() => Save(Water)" Label="Water (fl ounces)"></MudNumericField>
+            <MudTextField T="string" @bind-Value="Water.Notes" @bind-Value:after="() => Save(Water)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="12" md="4">
-        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudGrid>
-            <MudItem xs="12">
-                <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-            </MudItem>
-            <MudItem xs="12">
-                <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-            </MudItem>
-        </MudGrid>
-    </MudItem>
-    <MudItem xs="12" sm="6">
-        <MudPaper Elevation="2" Class="pa-4" Style="height: 100%"></MudPaper>
-    </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="4">
-        <MudPaper Elevation="2" Class="pa-4" Style="height: 200px;"></MudPaper>
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudText Typo="Typo.h6">Height</MudText>
+            <MudNumericField T="float" @bind-Value="User.HeightInches" @bind-Value:after="() => dbContext.SaveChangesAsync()" Label="Height Inches"></MudNumericField>
+        </MudPaper>
     </MudItem>
 </MudGrid>
 
@@ -95,6 +71,8 @@
     public UserVital Bpm { get; set; } = new();
     public UserVital Temperature { get; set; } = new();
     public UserVital Water { get; set; } = new();
+
+    public ApplicationUser User { get; set; } = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -114,6 +92,8 @@
 
         if (userId == null)
             return;
+
+        User = await dbContext.Users.FirstAsync(u => u.Id == userId);
 
         Vitals = await dbContext.UserVitals
             .Where(u => u.User.Id == userId)
