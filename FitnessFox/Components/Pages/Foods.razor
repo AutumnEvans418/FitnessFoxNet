@@ -1,0 +1,96 @@
+﻿@page "/foods"
+@attribute [Authorize]
+@inject ApplicationDbContext dbContext
+@inject AuthenticationStateProvider stateProvider
+@inject ISnackbar Snackbar
+<h3>Foods</h3>
+
+<MudDataGrid @ref="dataGrid" T="Food" ServerData="ServerReload" Filterable="false">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Foods</MudText>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small" Style="margin:5px">+</MudButton>
+        <MudSpacer />
+        <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="x => x.BrandRestaurant" Title="Branch/Restaurant" />
+        <PropertyColumn Property="x => x.Description" />
+        <PropertyColumn Property="x => x.ServingSize" />
+        <PropertyColumn Property="x => x.ServingUnit" />
+        <PropertyColumn Property="x => x.TotalServings" />
+        <PropertyColumn Property="x => x.Calories" />
+        <PropertyColumn Property="x => x.Sodium" />
+        <PropertyColumn Property="x => x.Cholesterol" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Food" />
+    </PagerContent>
+</MudDataGrid>
+@code {
+    MudDataGrid<Food>? dataGrid;
+    string? searchString = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        var user = await stateProvider.GetAuthenticationStateAsync();
+
+        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+            return;
+
+
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+    private async Task<GridData<Food>> ServerReload(GridState<Food> state)
+    {
+        var dataQuery = dbContext.Foods.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchString))
+        {
+            dataQuery = dataQuery.Where(p => p.BrandRestaurant.Contains(searchString) || p.Description.Contains(searchString));
+        }
+
+        var totalItems = await dataQuery.CountAsync();
+
+        var sortDefinition = state.SortDefinitions.FirstOrDefault();
+        if (sortDefinition != null)
+        {
+            switch (sortDefinition.SortBy)
+            {
+                case nameof(Food.BrandRestaurant):
+                    dataQuery = dataQuery.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.BrandRestaurant
+                    );
+                    break;
+                case nameof(Food.Description):
+                    dataQuery = dataQuery.OrderByDirection(
+                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
+                        o => o.Description
+                    );
+                    break;
+            }
+        }
+
+        var pagedData = await dataQuery.Skip(state.Page * state.PageSize).Take(state.PageSize).ToListAsync();
+        return new GridData<Food>
+        {
+            TotalItems = totalItems,
+            Items = pagedData
+        };
+    }
+
+    private async Task OnSearch(string text)
+    {
+        if (dataGrid == null)
+            return;
+        searchString = text;
+        await dataGrid.ReloadServerData();
+    }
+}
