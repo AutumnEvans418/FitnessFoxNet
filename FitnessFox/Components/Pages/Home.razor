@@ -1,8 +1,5 @@
 ﻿@page "/"
-@using FitnessFox.Data
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.EntityFrameworkCore
-@using System.Security.Claims
+
 @attribute [Authorize]
 @inject ApplicationDbContext dbContext
 @inject AuthenticationStateProvider stateProvider
@@ -23,7 +20,18 @@
     <MudItem xs="12" sm="6" md="4">
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Weight</MudText>
-            <MudNumericField T="float" @bind-Value="Weight.Value" @bind-Value:after="() => Save(Weight)" Label="Weight"></MudNumericField>
+            <MudStack Row=true>
+                <MudNumericField T="float" @bind-Value="Weight.Value" @bind-Value:after="() => Save(Weight)" Label="Weight"></MudNumericField>
+                @if (User.HeightInches > 0)
+                {
+                    <MudText Align="Align.Center">BMI @Extensions.Bmi(Weight.Value, User.HeightInches)</MudText>
+                }
+                @if (WeightGoal != null)
+                {
+                    <MudText Align="Align.Center">Goal Weight: @WeightGoal.Value (@(Weight.Value - WeightGoal.Value) to go)</MudText>
+                }
+
+            </MudStack>
             <MudTextField T="string" @bind-Value="Weight.Notes" @bind-Value:after="() => Save(Weight)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
@@ -39,14 +47,14 @@
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4" >
+        <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Temperature</MudText>
             <MudNumericField T="float" @bind-Value="Temperature.Value" @bind-Value:after="() => Save(Temperature)" Label="Temp"></MudNumericField>
             <MudTextField T="string" @bind-Value="Temperature.Notes" @bind-Value:after="() => Save(Temperature)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4" >
+        <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Water</MudText>
             <MudNumericField T="float" @bind-Value="Water.Value" @bind-Value:after="() => Save(Water)" Label="Water (fl ounces)"></MudNumericField>
             <MudTextField T="string" @bind-Value="Water.Notes" @bind-Value:after="() => Save(Water)" Label="Notes"></MudTextField>
@@ -74,6 +82,8 @@
 
     public ApplicationUser User { get; set; } = new();
 
+    public UserGoal? WeightGoal { get; set; }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender)
@@ -95,10 +105,16 @@
 
         User = await dbContext.Users.FirstAsync(u => u.Id == userId);
 
+        var currentDate = CurrentDate.GetValueOrDefault().Date;
+
         Vitals = await dbContext.UserVitals
             .Where(u => u.User.Id == userId)
-            .Where(u => u.DateCreated.Date == CurrentDate.GetValueOrDefault().Date)
+            .Where(u => u.DateCreated.Date == currentDate)
             .ToListAsync();
+
+        var goals = await dbContext.UserGoals.Where(u => u.UserId == userId).ToListAsync();
+
+        WeightGoal = goals.FirstOrDefault(g => g.Type == UserGoalType.WeightLbs);
 
         UserVital getType(UserVitalType type)
         {

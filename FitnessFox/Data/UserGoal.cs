@@ -10,4 +10,5 @@ namespace FitnessFox.Data
         public ApplicationUser User { get; set; } = null!;
 
     }
+
 }

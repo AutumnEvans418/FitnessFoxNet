@@ -1,10 +1,5 @@
 ﻿@page "/goals"
-@using FitnessFox.Data
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.EntityFrameworkCore
-@using System.Security.Claims
-@using FitnessFox.Services
-@using System.ComponentModel.DataAnnotations
+
 @attribute [Authorize]
 @inject ApplicationDbContext dbContext
 @inject AuthenticationStateProvider stateProvider
@@ -15,16 +10,15 @@
     @foreach (var goal in UserGoals)
     {
         <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" >
+            <MudPaper Elevation="2" Style="padding: 10px" >
                 @{
                     var name = goal.Type.GetAttribute<DisplayAttribute>();
                 }
-                <MudNumericField T="float" @bind-Value="goal.Value" Label="@name?.Name"></MudNumericField>
+                <MudNumericField T="float" @bind-Value="goal.Value" @bind-Value:after="() => Save(goal)" Label="@name?.Name"></MudNumericField>
             </MudPaper>
         </MudItem>
     }
 </MudGrid>
-<MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="Save" Variant="Variant.Filled" Color="Color.Primary">Save</MudButton>
 
 
 @code {
@@ -42,6 +36,7 @@
 
     public async Task Refresh()
     {
+        UserGoals.Clear();
         var user = await stateProvider.GetAuthenticationStateAsync();
 
         var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -64,9 +59,11 @@
         StateHasChanged();
     }
 
-    public async Task Save()
+    public async Task Save(UserGoal goal)
     {
-        dbContext.UpdateRange(UserGoals);
+
+
+        dbContext.Update(goal);
         await dbContext.SaveChangesAsync();
         Snackbar.Add("Saved!");
         await Refresh();

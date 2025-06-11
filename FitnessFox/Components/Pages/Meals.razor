@@ -1,0 +1,66 @@
+﻿@page "/meals"
+
+@attribute [Authorize]
+@inject ApplicationDbContext dbContext
+@inject AuthenticationStateProvider stateProvider
+@inject ISnackbar Snackbar
+
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12">
+        <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
+            <MudText Typo="Typo.h6">Current Date</MudText>
+            <MudStack Row=true>
+                <MudIconButton OnClick="() => SetDate(CurrentDate?.AddDays(-1))" Icon="@Icons.Material.Filled.ArrowLeft"></MudIconButton>
+                <MudDatePicker @bind-Date="CurrentDate" @bind-Date:after="Refresh"></MudDatePicker>
+                <MudIconButton OnClick="() => SetDate(CurrentDate?.AddDays(1))" Icon="@Icons.Material.Filled.ArrowRight"></MudIconButton>
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+@code {
+    public DateTime? CurrentDate { get; set; } = DateTime.Now;
+    public ApplicationUser User { get; set; } = new();
+    public List<UserMeal> UserMeals { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Refresh();
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+    public async Task Refresh()
+    {
+        var user = await stateProvider.GetAuthenticationStateAsync();
+
+        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+            return;
+
+        User = await dbContext.Users.FirstAsync(u => u.Id == userId);
+
+        var currentDate = CurrentDate.GetValueOrDefault().Date;
+
+        UserMeals = await dbContext
+            .UserMeals
+            .Where(u => u.UserId == userId && u.DateCreated == currentDate)
+            .Include(u => u.Food)
+            .Include(u => u.Recipe)
+            .ThenInclude(u => u!.Foods)
+            .ThenInclude(u => u.Food)
+            .ToListAsync();
+
+
+
+        StateHasChanged();
+    }
+
+    public async Task SetDate(DateTime? date)
+    {
+        CurrentDate = date;
+        await Refresh();
+    }
+}

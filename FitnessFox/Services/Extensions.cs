@@ -16,5 +16,7 @@ namespace FitnessFox.Services
                             .First()
                             .GetCustomAttribute<TAttribute>();
         }
+
+        public static float Bmi(float weight, float height) => MathF.Round((703 * weight) / MathF.Pow(height, 2), 2);
     }
 }
