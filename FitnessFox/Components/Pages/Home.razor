@@ -28,7 +28,7 @@
                 }
                 @if (WeightGoal != null)
                 {
-                    <MudText Align="Align.Center">Goal Weight: @WeightGoal.Value (@(Weight.Value - WeightGoal.Value) to go)</MudText>
+                    <MudText Align="Align.Center">Goal Weight: @WeightGoal.Value (@MathF.Round(Weight.Value - WeightGoal.Value)lbs to go)</MudText>
                 }
 
             </MudStack>

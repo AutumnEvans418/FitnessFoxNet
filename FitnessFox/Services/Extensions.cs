@@ -18,5 +18,8 @@ namespace FitnessFox.Services
         }
 
         public static float Bmi(float weight, float height) => MathF.Round((703 * weight) / MathF.Pow(height, 2), 2);
+        public static float BmiWeight(float bmi, float height) => MathF.Round((bmi * MathF.Pow(height, 2)) / 703, 2);
+
+        public static float Calories(float weightLoss, float caloriesBurnedWeekly) => 2000 - (weightLoss * 500) - (caloriesBurnedWeekly / 7);
     }
 }

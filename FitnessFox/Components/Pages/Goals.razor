@@ -10,7 +10,7 @@
     @foreach (var goal in UserGoals)
     {
         <MudItem xs="12" sm="6" md="4">
-            <MudPaper Elevation="2" Style="padding: 10px" >
+            <MudPaper Elevation="2" Style="padding: 10px">
                 @{
                     var name = goal.Type.GetAttribute<DisplayAttribute>();
                 }
@@ -25,6 +25,7 @@
     public List<UserGoalType> GoalTypes { get; set; } = Enum.GetValues<UserGoalType>().ToList();
 
     public List<UserGoal> UserGoals { get; set; } = new();
+    public ApplicationUser User { get; set; } = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -43,6 +44,7 @@
 
         if (userId == null)
             return;
+        User = await dbContext.Users.FirstAsync(u => u.Id == userId);
 
         var goals = await dbContext.UserGoals.Where(u => u.UserId == userId).ToListAsync();
 
@@ -61,7 +63,18 @@
 
     public async Task Save(UserGoal goal)
     {
-
+        if (goal.Type == UserGoalType.WeightLbs && User.HeightInches >= 0)
+        {
+            var bmi = UserGoals.First(b => b.Type == UserGoalType.Bmi);
+            bmi.Value = Extensions.Bmi(goal.Value, User.HeightInches);
+            dbContext.Update(bmi);
+        }
+        else if (goal.Type == UserGoalType.Bmi && User.HeightInches >= 0)
+        {
+            var weight = UserGoals.First(b => b.Type == UserGoalType.WeightLbs);
+            weight.Value = Extensions.BmiWeight(goal.Value, User.HeightInches);
+            dbContext.Update(weight);
+        }
 
         dbContext.Update(goal);
         await dbContext.SaveChangesAsync();
