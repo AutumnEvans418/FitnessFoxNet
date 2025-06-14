@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/FitnessFox/database.dat
+/FitnessFox/database.dat-shm
+/FitnessFox/database.dat-wal
