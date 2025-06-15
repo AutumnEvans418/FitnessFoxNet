@@ -3,12 +3,17 @@
 @inject ApplicationDbContext dbContext
 @inject AuthenticationStateProvider stateProvider
 @inject ISnackbar Snackbar
+@inject NavigationManager navigationManager
+
 <h3>Foods</h3>
 
-<MudDataGrid @ref="dataGrid" T="Food" ServerData="ServerReload" Filterable="false">
+<MudDataGrid @ref="dataGrid" RowClick="@(r => navigationManager.NavigateTo($"/foods/{r.Item.Id}"))" T="Food" ServerData="ServerReload" Filterable="false">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Foods</MudText>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small" Style="margin:5px">+</MudButton>
+        <MudButton Color="Color.Primary" 
+            Variant="Variant.Filled" 
+            Size="Size.Small" 
+            Style="margin:5px" Href="/foods/add">+</MudButton>
         <MudSpacer />
         <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>

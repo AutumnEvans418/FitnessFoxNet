@@ -1,0 +1,71 @@
+﻿@page "/foods/add"
+@page "/foods/{id:int}"
+@attribute [Authorize]
+@inject ApplicationDbContext dbContext
+@inject AuthenticationStateProvider stateProvider
+@inject ISnackbar Snackbar
+@inject NavigationManager navigationManager
+@inject IJSRuntime jsRuntime
+<EditForm Model="Model" OnSubmit="Submit" FormName="Food1">
+    <MudTextField T="string" @bind-Value="Model!.BrandRestaurant" Label="Brand/Restaurant" Required=true></MudTextField>
+    <MudTextField T="string" @bind-Value="Model!.Description" Label="Description/Food Name" Required=true></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.ServingSize" Label="Serving Size" Required=true></MudTextField>
+    <MudTextField T="string" @bind-Value="Model!.ServingUnit" Label="Serving Size Units" Required=true></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.TotalServings" Label="Total Servings in Container" Required=true></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Calories" Label="Calories"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.TotalFat" Label="Total Fat"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.SaturatedFat" Label="Saturated Fat"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.PolysaturatedFat" Label="Polysaturated Fat"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.MonosaturatedFat" Label="Monosaturated Fat"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.TransFat" Label="Trans Fat"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Cholesterol" Label="Cholesterol"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Sodium" Label="Sodium"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Potassium" Label="Potassium"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Carbs" Label="Carbs"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Fiber" Label="Fiber"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Sugar" Label="Sugar"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Protein" Label="Protein"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.VitaminA" Label="Vitamin A"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.VitaminC" Label="Vitamin C"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Calcium" Label="Calcium"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.Iron" Label="Iron"></MudTextField>
+    <MudTextField T="float" @bind-Value="Model!.VitaminK" Label="Vitamin K"></MudTextField>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">Submit</MudButton>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    public Food? Model { get; set; }
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != null)
+        {
+            Model = await dbContext.Foods.FirstAsync(f => f.Id == Id);
+        }
+        Model ??= new();
+    }
+
+    public async Task Submit()
+    {
+        if (Model == null)
+            return;
+
+        var user = await stateProvider.GetAuthenticationStateAsync();
+
+        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+            return;
+
+        Model.UserId = userId;
+
+        dbContext.Foods.Update(Model);
+        await dbContext.SaveChangesAsync();
+        await jsRuntime.InvokeVoidAsync("history.back");
+    }
+}
