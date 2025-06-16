@@ -7,31 +7,40 @@
 @inject NavigationManager navigationManager
 @inject IJSRuntime jsRuntime
 <EditForm Model="Model" OnSubmit="Submit" FormName="Food1">
-    <MudTextField T="string" @bind-Value="Model!.BrandRestaurant" Label="Brand/Restaurant" Required=true></MudTextField>
-    <MudTextField T="string" @bind-Value="Model!.Description" Label="Description/Food Name" Required=true></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.ServingSize" Label="Serving Size" Required=true></MudTextField>
-    <MudTextField T="string" @bind-Value="Model!.ServingUnit" Label="Serving Size Units" Required=true></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.TotalServings" Label="Total Servings in Container" Required=true></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Calories" Label="Calories"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.TotalFat" Label="Total Fat"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.SaturatedFat" Label="Saturated Fat"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.PolysaturatedFat" Label="Polysaturated Fat"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.MonosaturatedFat" Label="Monosaturated Fat"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.TransFat" Label="Trans Fat"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Cholesterol" Label="Cholesterol"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Sodium" Label="Sodium"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Potassium" Label="Potassium"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Carbs" Label="Carbs"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Fiber" Label="Fiber"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Sugar" Label="Sugar"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Protein" Label="Protein"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.VitaminA" Label="Vitamin A"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.VitaminC" Label="Vitamin C"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Calcium" Label="Calcium"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.Iron" Label="Iron"></MudTextField>
-    <MudTextField T="float" @bind-Value="Model!.VitaminK" Label="Vitamin K"></MudTextField>
+    <DataAnnotationsValidator />
 
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">Submit</MudButton>
+    <MudPaper Class="p-2 mb-2 mt-2">
+        <MudTextField Class="mb-2" T="string" @bind-Value="Model!.BrandRestaurant" Label="Brand/Restaurant" Required=true></MudTextField>
+        <MudTextField Class="mb-2" T="string" @bind-Value="Model!.Description" Label="Description/Food Name" Required=true></MudTextField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.ServingSize" Label="Serving Size" Required=true></MudNumericField>
+        <MudAutocomplete Class="mb-2" T="string" CoerceValue=true Label="Serving Size Units" Clearable="true" SearchFunc="Search" @bind-Value="Model!.ServingUnit" ></MudAutocomplete>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.TotalServings" Label="Total Servings in Container" Required=true></MudNumericField>
+    </MudPaper>
+
+    <MudPaper Class="p-2 mb-2">
+
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Calories" Label="Calories"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.TotalFat" Label="Total Fat"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.SaturatedFat" Label="Saturated Fat"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.PolysaturatedFat" Label="Polysaturated Fat"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.MonosaturatedFat" Label="Monosaturated Fat"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.TransFat" Label="Trans Fat"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Cholesterol" Label="Cholesterol"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Sodium" Label="Sodium"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Potassium" Label="Potassium"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Carbs" Label="Carbs"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Fiber" Label="Fiber"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Sugar" Label="Sugar"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Protein" Label="Protein"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.VitaminA" Label="Vitamin A"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.VitaminC" Label="Vitamin C"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Calcium" Label="Calcium"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.Iron" Label="Iron"></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.VitaminK" Label="Vitamin K"></MudNumericField>
+
+    </MudPaper>
+
+    <MudButton Class="mb-4" Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">Submit</MudButton>
 </EditForm>
 
 @code {
@@ -41,6 +50,8 @@
     [Parameter]
     public int? Id { get; set; }
 
+    public List<string> Units { get; set; } = [];
+
     protected override async Task OnInitializedAsync()
     {
         if (Id != null)
@@ -48,6 +59,8 @@
             Model = await dbContext.Foods.FirstAsync(f => f.Id == Id);
         }
         Model ??= new();
+
+        Units = await dbContext.Foods.Select(f => f.ServingUnit).Distinct().ToListAsync();
     }
 
     public async Task Submit()
@@ -67,5 +80,13 @@
         dbContext.Foods.Update(Model);
         await dbContext.SaveChangesAsync();
         await jsRuntime.InvokeVoidAsync("history.back");
+    }
+
+    private async Task<IEnumerable<string>> Search(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Units;
+
+        return Units.Where(u => u.Contains(value, StringComparison.InvariantCultureIgnoreCase)).ToList();
     }
 }

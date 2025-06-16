@@ -6,8 +6,11 @@ namespace FitnessFox.Data
         public int RecipeId { get; set; }
         public int FoodId { get; set; }
         public float Amount { get; set; }
-        public Recipe Recipe { get; set; } = null!;
-        public Food Food { get; set; } = null!;
+        public Recipe? Recipe { get; set; }
+        public Food? Food { get; set; }
+
+        public string ServingUnitDisplay => $"{MathF.Round((Amount * Food?.ServingSize) ?? 0, 2)} {Food?.ServingUnit}";
+
     }
 
 }

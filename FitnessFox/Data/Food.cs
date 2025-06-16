@@ -1,3 +1,5 @@
+using Microsoft.VisualBasic;
+
 namespace FitnessFox.Data
 {
     public class Food : Nutrients
@@ -12,6 +14,13 @@ namespace FitnessFox.Data
         public float TotalServings { get; set; } = 1;
 
         public ApplicationUser User { get; set; } = null!;
+
+        public string Name => $"{BrandRestaurant} - {Description}";
+
+        public override string ToString()
+        {
+            return Name;
+        }
 
     }
 

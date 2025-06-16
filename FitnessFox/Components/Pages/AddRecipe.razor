@@ -1,0 +1,143 @@
+﻿@page "/recipes/add"
+@page "/recipes/{id:int}"
+@attribute [Authorize]
+@inject ApplicationDbContext dbContext
+@inject AuthenticationStateProvider stateProvider
+@inject ISnackbar Snackbar
+@inject NavigationManager navigationManager
+@inject IJSRuntime jsRuntime
+<EditForm Model="Model" OnSubmit="Submit" FormName="Recipe1">
+    <DataAnnotationsValidator />
+
+    <MudPaper Class="p-2 mb-2 mt-2">
+        <MudTextField Class="mb-2" T="string" @bind-Value="Model!.Name" Label="Name" Required=true></MudTextField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.NumberOfPeople" @bind-Value:after="IngredientUpdated" Label="Number of People" Required=true></MudNumericField>
+    </MudPaper>
+
+    <MudPaper Class="p-2 mb-2">
+
+        <MudTable Items="Model!.Foods" Context="food" CanCancelEdit=true RowEditCommit="i => IngredientUpdated()">
+            <ToolBarContent>
+                <MudText>Ingredients</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="() => Model!.Foods.Add(new())"></MudIconButton>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Food</MudTh>
+                <MudTh>Amount</MudTh>
+                <MudTh>Total Calories</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@food.Food?.Name</MudTd>
+                <MudTd>@food.Amount (@food.ServingUnitDisplay)</MudTd>
+                <MudTd>@MathF.Round((food.Food?.Calories ?? 0) * food.Amount, 2)</MudTd>
+            </RowTemplate>
+            <RowEditingTemplate>
+                <MudTd>
+                    <MudAutocomplete T="Food"
+                                     @bind-Value="@food.Food"
+                                     SearchFunc="Search"
+                                     Variant="Variant.Outlined"
+                                     Label="Meal"
+                                     Clearable></MudAutocomplete>
+                    <MudIconButton Color="Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Edit" Href="@($"/foods/{food.FoodId}")"></MudIconButton>
+
+                </MudTd>
+                <MudTd>
+                    <MudNumericField T="float"
+                                     @bind-Value="food.Amount"
+                                     Label="Servings"></MudNumericField> (@food.ServingUnitDisplay)
+                </MudTd>
+            </RowEditingTemplate>
+        </MudTable>
+    </MudPaper>
+
+    <MudPaper Class="p-2 mb-2">
+        <MudText>Per Serving Nutrition Facts</MudText>
+
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Calories" Label="Calories"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.TotalFat" Label="Total Fat"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.SaturatedFat" Label="Saturated Fat"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.PolysaturatedFat" Label="Polysaturated Fat"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.MonosaturatedFat" Label="Monosaturated Fat"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.TransFat" Label="Trans Fat"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Cholesterol" Label="Cholesterol"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Sodium" Label="Sodium"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Potassium" Label="Potassium"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Carbs" Label="Carbs"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Fiber" Label="Fiber"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Sugar" Label="Sugar"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Protein" Label="Protein"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.VitaminA" Label="Vitamin A"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.VitaminC" Label="Vitamin C"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Calcium" Label="Calcium"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.Iron" Label="Iron"></MudNumericField>
+        <MudNumericField ReadOnly=true Class="mb-2" T="float" @bind-Value="Model!.VitaminK" Label="Vitamin K"></MudNumericField>
+
+    </MudPaper>
+
+    <MudButton Class="mb-4" Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit">Submit</MudButton>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    public Recipe? Model { get; set; }
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != null)
+        {
+            Model = await dbContext
+                .Recipes
+                .Include(r => r.Foods)
+                .ThenInclude(r => r.Food)
+                .FirstAsync(f => f.Id == Id);
+        }
+        Model ??= new();
+    }
+
+    public async Task Submit()
+    {
+        if (Model == null)
+            return;
+
+        var user = await stateProvider.GetAuthenticationStateAsync();
+
+        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+            return;
+
+        Model.UserId = userId;
+
+        Model.SetNutrients();
+
+        dbContext.Recipes.Update(Model);
+        await dbContext.SaveChangesAsync();
+        await jsRuntime.InvokeVoidAsync("history.back");
+    }
+
+    private async Task<IEnumerable<Food>> Search(string value, CancellationToken token)
+    {
+        var foods = dbContext.Foods.OrderBy(f => f.BrandRestaurant).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            foods = foods.Where(f => f.BrandRestaurant.Contains(value) || f.Description.Contains(value));
+        }
+
+        var foodsList = await foods.Take(20).ToListAsync();
+
+        return foodsList
+            .OrderBy(n => n.Name)
+            .ToList();
+    }
+
+    public void IngredientUpdated()
+    {
+        Model?.SetNutrients();
+        StateHasChanged();
+    }
+}

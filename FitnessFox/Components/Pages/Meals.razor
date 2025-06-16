@@ -4,7 +4,6 @@
 @inject ApplicationDbContext dbContext
 @inject AuthenticationStateProvider stateProvider
 @inject ISnackbar Snackbar
-
 <MudGrid>
     <MudItem xs="12" sm="12" md="12">
         <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
@@ -16,21 +15,95 @@
             </MudStack>
         </MudPaper>
     </MudItem>
+
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="2" Class="pa-4">
+            @{
+                var goal = Goals.FirstOrDefault(g => g.Type == UserGoalType.Calories);
+            }
+
+            <MudProgressCircular Style="height: 100px; width: 100px" Color="Color.Primary" Value="@UserMeals.Sum(s => s.Calories)" Max="goal?.Value ?? 2000">
+                <ChildContent>
+                    <MudStack Spacing="0" AlignItems="AlignItems.Center" Justify="Justify.Center">
+                        <MudText Typo="Typo.subtitle2">Calories</MudText>
+                        <MudText Typo="Typo.subtitle2">@UserMeals.Sum(s => s.Calories)/@(@goal?.Value ?? 2000)</MudText>
+                    </MudStack>
+                </ChildContent>
+            </MudProgressCircular>
+
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" sm="12" md="12">
+        <MudPaper Elevation="2" Class="pa-4">
+            <MudText Typo="Typo.h4">Meals</MudText>
+            <MudGrid>
+                @foreach (UserMealType item in Enum.GetValues(typeof(UserMealType)))
+                {
+                    <MudItem Class="m-2">
+                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" OnClick="() => Add(item)">@item</MudButton>
+                    </MudItem>
+                }
+
+                <MudItem Class="m-2">
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Href="/foods/add">New Food</MudButton>
+
+                </MudItem>
+            </MudGrid>
+            <MudTable Items="UserMeals" RowEditCommit="i => Update(i as UserMeal)" CanCancelEdit=true>
+            
+                <HeaderContent>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Meal</MudTh>
+                    <MudTh>Servings</MudTh>
+                    <MudTh>Calories</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Type</MudTd>
+                    <MudTd>@context.MealItem</MudTd>
+                    <MudTd>@context.Servings (@context.ServingUnitDisplay)</MudTd>
+                    <MudTd>@context.Calories</MudTd>
+                </RowTemplate>
+                <RowEditingTemplate>
+                    <MudTd>
+                        <MudSelect T="UserMealType" @bind-Value="context.Type">
+                            @foreach (UserMealType item in Enum.GetValues(typeof(UserMealType)))
+                            {
+                                <MudSelectItem T="UserMealType" Value="@item">@item</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudTd>
+                    <MudTd>
+                        <MudAutocomplete T="Nutrients"
+                                         @bind-Value="@context.MealItem"
+                                         SearchFunc="Search"
+                                         Variant="Variant.Outlined"
+                                         Label="Meal"
+                                         Clearable></MudAutocomplete>
+                        <MudIconButton Color="Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Edit" Href="@($"/foods/{@context.FoodId}")"></MudIconButton>
+
+                    </MudTd>
+                    <MudTd>
+                        <MudNumericField T="float"
+                                      @bind-Value="context.Servings"
+                                      Label="Servings"></MudNumericField> (@context.ServingUnitDisplay)
+                    </MudTd>
+                </RowEditingTemplate>
+            </MudTable>
+        </MudPaper>
+    </MudItem>
 </MudGrid>
 @code {
     public DateTime? CurrentDate { get; set; } = DateTime.Now;
     public ApplicationUser User { get; set; } = new();
     public List<UserMeal> UserMeals { get; set; } = new();
+    public List<UserGoal> Goals { get; set; } = [];
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (!firstRender)
-            return;
-
         await Refresh();
-
-        await base.OnAfterRenderAsync(firstRender);
     }
+
     public async Task Refresh()
     {
         var user = await stateProvider.GetAuthenticationStateAsync();
@@ -44,16 +117,15 @@
 
         var currentDate = CurrentDate.GetValueOrDefault().Date;
 
+        Goals = await dbContext.UserGoals.Where(u => u.UserId == userId).ToListAsync();
+
         UserMeals = await dbContext
             .UserMeals
-            .Where(u => u.UserId == userId && u.DateCreated == currentDate)
+            .Where(u => u.UserId == userId && u.DateCreated.Date == currentDate)
             .Include(u => u.Food)
             .Include(u => u.Recipe)
-            .ThenInclude(u => u!.Foods)
-            .ThenInclude(u => u.Food)
+            .OrderBy(p => p.Type)
             .ToListAsync();
-
-
 
         StateHasChanged();
     }
@@ -62,5 +134,53 @@
     {
         CurrentDate = date;
         await Refresh();
+    }
+
+    public void Add(UserMealType type)
+    {
+        var meal = new UserMeal
+        {
+            DateCreated = CurrentDate.GetValueOrDefault(),
+            UserId = User.Id,
+            Type = type,
+        };
+        UserMeals.Add(meal);
+        StateHasChanged();
+    }
+    private async Task<IEnumerable<Nutrients>> Search(string value, CancellationToken token)
+    {
+        var foods = dbContext.Foods.OrderBy(f => f.BrandRestaurant).AsQueryable();
+        var recipes = dbContext.Recipes.OrderBy(f => f.Name).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            foods = foods.Where(f => f.BrandRestaurant.Contains(value) || f.Description.Contains(value));
+            recipes = recipes.Where(f => f.Name.Contains(value));
+        }
+
+        var foodsList = await foods.Take(20).ToListAsync();
+        var recipesList = await recipes.Take(20).ToListAsync();
+
+        return foodsList
+            .Cast<Nutrients>()
+            .Union(recipesList)
+            .OrderBy(n =>
+            {
+                if (n is Food f)
+                    return f.Name;
+                if (n is Recipe r)
+                    return r.Name;
+                throw new NotImplementedException();
+            }).ToList();
+    }
+
+    public async Task Update(UserMeal meal)
+    {
+        meal.SetNutrients();
+
+        dbContext.Update(meal);
+        await dbContext.SaveChangesAsync();
+
+        StateHasChanged();
     }
 }

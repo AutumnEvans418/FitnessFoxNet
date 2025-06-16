@@ -1,27 +1,24 @@
-﻿@page "/foods"
+﻿@page "/recipes"
 @attribute [Authorize]
 @inject ApplicationDbContext dbContext
 @inject AuthenticationStateProvider stateProvider
 @inject ISnackbar Snackbar
 @inject NavigationManager navigationManager
-
-<MudDataGrid @ref="dataGrid" RowClick="@(r => navigationManager.NavigateTo($"/foods/{r.Item.Id}"))" T="Food" ServerData="ServerReload" Filterable="false">
+<MudDataGrid @ref="dataGrid" RowClick="@(r => navigationManager.NavigateTo($"/recipes/{r.Item.Id}"))" T="Recipe" ServerData="ServerReload" Filterable="false">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Foods</MudText>
-        <MudButton Color="Color.Primary" 
-            Variant="Variant.Filled" 
-            Size="Size.Small" 
-            Style="margin:5px" Href="/foods/add">+</MudButton>
+        <MudText Typo="Typo.h6">Recipes</MudText>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   Size="Size.Small"
+                   Style="margin:5px" Href="/recipes/add">+</MudButton>
         <MudSpacer />
         <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <Columns>
-        <PropertyColumn Property="x => x.BrandRestaurant" Title="Branch/Restaurant" />
-        <PropertyColumn Property="x => x.Description" />
-        <PropertyColumn Property="x => x.ServingSize" />
-        <PropertyColumn Property="x => x.ServingUnit" />
-        <PropertyColumn Property="x => x.TotalServings" />
+        <PropertyColumn Property="x => x.Name" Title="Name" />
+        <PropertyColumn Property="x => x.NumberOfPeople" Title="Number of People" />
+        <PropertyColumn Property="x => x.User.UserName" Title="Created By" />
         <PropertyColumn Property="x => x.Calories" />
         <PropertyColumn Property="x => x.Sodium" />
         <PropertyColumn Property="x => x.Cholesterol" />
@@ -31,7 +28,7 @@
     </PagerContent>
 </MudDataGrid>
 @code {
-    MudDataGrid<Food>? dataGrid;
+    MudDataGrid<Recipe>? dataGrid;
     string? searchString = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -50,13 +47,13 @@
 
         await base.OnAfterRenderAsync(firstRender);
     }
-    private async Task<GridData<Food>> ServerReload(GridState<Food> state)
+    private async Task<GridData<Recipe>> ServerReload(GridState<Recipe> state)
     {
-        var dataQuery = dbContext.Foods.AsQueryable();
+        var dataQuery = dbContext.Recipes.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchString))
         {
-            dataQuery = dataQuery.Where(p => p.BrandRestaurant.Contains(searchString) || p.Description.Contains(searchString));
+            dataQuery = dataQuery.Where(p => p.Name.Contains(searchString));
         }
 
         var totalItems = await dataQuery.CountAsync();
@@ -66,23 +63,23 @@
         {
             switch (sortDefinition.SortBy)
             {
-                case nameof(Food.BrandRestaurant):
+                case nameof(Recipe.Name):
                     dataQuery = dataQuery.OrderByDirection(
                         sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                        o => o.BrandRestaurant
+                        o => o.Name
                     );
                     break;
-                case nameof(Food.Description):
+                case nameof(Recipe.NumberOfPeople):
                     dataQuery = dataQuery.OrderByDirection(
                         sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                        o => o.Description
+                        o => o.NumberOfPeople
                     );
                     break;
             }
         }
 
         var pagedData = await dataQuery.Skip(state.Page * state.PageSize).Take(state.PageSize).ToListAsync();
-        return new GridData<Food>
+        return new GridData<Recipe>
         {
             TotalItems = totalItems,
             Items = pagedData
