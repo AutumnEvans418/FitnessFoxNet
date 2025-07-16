@@ -1,3 +1,6 @@
+using FitnessFox.Data.Foods;
+using FitnessFox.Data.Goals;
+using FitnessFox.Data.Vitals;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 

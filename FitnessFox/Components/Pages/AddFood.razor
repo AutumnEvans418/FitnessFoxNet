@@ -1,5 +1,6 @@
 ﻿@page "/foods/add"
 @page "/foods/{id:int}"
+@using FitnessFox.Data.Foods
 @attribute [Authorize]
 @inject ApplicationDbContext dbContext
 @inject AuthenticationStateProvider stateProvider

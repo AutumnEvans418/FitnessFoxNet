@@ -1,4 +1,4 @@
-namespace FitnessFox.Data
+namespace FitnessFox.Data.Goals
 {
     public class UserGoal
     {

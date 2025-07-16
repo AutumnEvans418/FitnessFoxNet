@@ -1,4 +1,4 @@
-namespace FitnessFox.Data
+namespace FitnessFox.Data.Foods
 {
     public class RecipeFood
     {
@@ -9,7 +9,7 @@ namespace FitnessFox.Data
         public Recipe? Recipe { get; set; }
         public Food? Food { get; set; }
 
-        public string ServingUnitDisplay => $"{MathF.Round((Amount * Food?.ServingSize) ?? 0, 2)} {Food?.ServingUnit}";
+        public string ServingUnitDisplay => $"{MathF.Round(Amount * Food?.ServingSize ?? 0, 2)} {Food?.ServingUnit}";
 
     }
 

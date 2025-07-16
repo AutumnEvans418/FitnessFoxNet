@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FitnessFox.Data
+namespace FitnessFox.Data.Foods
 {
     public class UserMeal : Nutrients
     {
@@ -54,7 +54,7 @@ namespace FitnessFox.Data
 
         public void SetNutrients()
         {
-            base.Calories = MealItem?.Calories * Servings ?? 0;
+            Calories = MealItem?.Calories * Servings ?? 0;
 
         }
 

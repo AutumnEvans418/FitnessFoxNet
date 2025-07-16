@@ -1,6 +1,6 @@
 using Microsoft.VisualBasic;
 
-namespace FitnessFox.Data
+namespace FitnessFox.Data.Foods
 {
     public class Food : Nutrients
     {

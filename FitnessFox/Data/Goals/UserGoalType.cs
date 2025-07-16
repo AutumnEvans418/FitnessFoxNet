@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace FitnessFox.Data
+namespace FitnessFox.Data.Goals
 {
     public enum UserGoalType
     {
