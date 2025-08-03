@@ -39,20 +39,15 @@
     <MudItem xs="12" sm="12" md="12">
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h4">Meals</MudText>
-            <MudGrid>
-                @foreach (UserMealType item in Enum.GetValues(typeof(UserMealType)))
-                {
-                    <MudItem Class="m-2">
-                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" OnClick="() => Add(item)">@item</MudButton>
-                    </MudItem>
-                }
+            <MudButtonGroup  Variant="Variant.Filled" >
+                <MudIconButton title="Breakfast" Icon="@Icons.Material.Filled.EggAlt" OnClick="() => Add(UserMealType.Breakfast)"></MudIconButton>
+                <MudIconButton title="Lunch" Icon="@Icons.Material.Filled.LunchDining" OnClick="() => Add(UserMealType.Lunch)"></MudIconButton>
+                <MudIconButton title="Dinner" Icon="@Icons.Material.Filled.OutdoorGrill" OnClick="() => Add(UserMealType.Dinner)"></MudIconButton>
+                <MudIconButton title="Snack" Icon="@Icons.Material.Filled.LocalDrink" OnClick="() => Add(UserMealType.Snacks)"></MudIconButton>
 
-                <MudItem Class="m-2">
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Add" Href="/foods/add">New Food</MudButton>
-
-                </MudItem>
-            </MudGrid>
-            <MudTable Items="UserMeals" RowEditCommit="i => Update(i as UserMeal)" CanCancelEdit=true>
+                <MudIconButton title="Add Food" Color="Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Add" Href="/foods/add"></MudIconButton>
+            </MudButtonGroup>
+            <MudTable Items="UserMeals" RowEditCommit="async i => await Update(i as UserMeal)" CanCancelEdit=true>
             
                 <HeaderContent>
                     <MudTh>Type</MudTh>

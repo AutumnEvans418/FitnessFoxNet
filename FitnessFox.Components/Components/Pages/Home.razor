@@ -34,7 +34,6 @@
                 }
 
             </MudStack>
-            <MudTextField T="string" @bind-Value="Weight.Notes" @bind-Value:after="() => Save(Weight)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
@@ -45,21 +44,18 @@
                 <MudNumericField T="float" @bind-Value="Diastolic.Value" @bind-Value:after="() => Save(Diastolic)" Label="Diastolic"></MudNumericField>
                 <MudNumericField T="float" @bind-Value="Bpm.Value" @bind-Value:after="() => Save(Bpm)" Label="Bpm"></MudNumericField>
             </MudStack>
-            <MudTextField T="string" @bind-Value="Systolic.Notes" @bind-Value:after="() => Save(Systolic)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Temperature</MudText>
             <MudNumericField T="float" @bind-Value="Temperature.Value" @bind-Value:after="() => Save(Temperature)" Label="Temp"></MudNumericField>
-            <MudTextField T="string" @bind-Value="Temperature.Notes" @bind-Value:after="() => Save(Temperature)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Water</MudText>
             <MudNumericField T="float" @bind-Value="Water.Value" @bind-Value:after="() => Save(Water)" Label="Water (fl ounces)"></MudNumericField>
-            <MudTextField T="string" @bind-Value="Water.Notes" @bind-Value:after="() => Save(Water)" Label="Notes"></MudTextField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
@@ -150,7 +146,6 @@
             dbContext.Update(item);
         }
         await dbContext.SaveChangesAsync();
-        Snackbar.Add("Saved");
         StateHasChanged();
     }
 
