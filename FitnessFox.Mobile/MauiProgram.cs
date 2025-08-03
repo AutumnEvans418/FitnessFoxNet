@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FitnessFox.Data;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 
 namespace FitnessFox.Mobile
 {
@@ -13,15 +17,30 @@ namespace FitnessFox.Mobile
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
+            builder.Services.AddScoped<AuthenticationStateProvider, ApplicationDbContextStateProvider>();
+            builder.Services.AddAuthorizationCore();
 
             builder.Services.AddMauiBlazorWebView();
-
+            builder.Services.AddMudServices();
+            builder.Services.AddCascadingAuthenticationState();
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseSqlite($"Data Source=" + Path.Combine(FileSystem.AppDataDirectory, "database.dat"));
+            });
 #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
+
 #endif
 
-            return builder.Build();
+            var app = builder.Build();
+
+            using var scope = app.Services.CreateScope();
+
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.Database.EnsureCreated();
+
+            return app;
         }
     }
 }

@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Identity
 @using FitnessFox.Data
 
-@inject SignInManager<ApplicationUser> SignInManager
+@inject SignInManager<IdentityUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
 @if (externalLogins.Length == 0)

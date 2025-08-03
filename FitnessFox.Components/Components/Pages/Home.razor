@@ -26,7 +26,7 @@
                 <MudNumericField T="float" @bind-Value="Weight.Value" @bind-Value:after="() => Save(Weight)" Label="Weight"></MudNumericField>
                 @if (User.HeightInches > 0)
                 {
-                    <MudText Align="Align.Center">BMI @Extensions.Bmi(Weight.Value, User.HeightInches)</MudText>
+                    <MudText Align="Align.Center">BMI @FitnessExtensions.Bmi(Weight.Value, User.HeightInches)</MudText>
                 }
                 @if (WeightGoal != null)
                 {

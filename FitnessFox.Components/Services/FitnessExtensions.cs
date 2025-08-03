@@ -2,7 +2,7 @@
 
 namespace FitnessFox.Services
 {
-    public static class Extensions
+    public static class FitnessExtensions
     {
         /// <summary>
         ///     A generic extension method that aids in reflecting 

@@ -3,6 +3,7 @@ using FitnessFox.Components.Account;
 using FitnessFox.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 
@@ -33,8 +34,8 @@ var dbType = builder.Configuration["DatabaseType"];
 if(dbType == "SqlServer")
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
+    builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+    builder.Services.AddDbContext<IdentityDbContext>(options => options.UseSqlServer(connectionString));
 }
 else if(dbType == "Sqlite")
 {
@@ -42,16 +43,20 @@ else if(dbType == "Sqlite")
     {
         options.UseSqlite("Data Source=database.dat");
     });
+    builder.Services.AddDbContext<IdentityDbContext>(options =>
+    {
+        options.UseSqlite("Data Source=database.dat");
+    });
 }
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>()
+builder.Services.AddIdentityCore<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddEntityFrameworkStores<IdentityDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddSingleton<IEmailSender<IdentityUser>, IdentityNoOpEmailSender>();
 
 var app = builder.Build();
 

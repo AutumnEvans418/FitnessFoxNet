@@ -1,12 +1,11 @@
 using FitnessFox.Data.Foods;
 using FitnessFox.Data.Goals;
 using FitnessFox.Data.Vitals;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FitnessFox.Data
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
+    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
     {
         public DbSet<UserVital> UserVitals { get; set; }
         public DbSet<UserGoal> UserGoals { get; set; }
@@ -14,6 +13,7 @@ namespace FitnessFox.Data
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<RecipeFood> RecipeFoods { get; set; }
         public DbSet<UserMeal> UserMeals { get; set; }
+        public DbSet<ApplicationUser> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -21,6 +21,11 @@ namespace FitnessFox.Data
                 .HasMany(r => r.Foods)
                 .WithOne(rf => rf.Recipe)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<ApplicationUser>(b =>
+            {
+                b.ToTable("AspNetUsers");
+            });
 
             base.OnModelCreating(builder);
         }

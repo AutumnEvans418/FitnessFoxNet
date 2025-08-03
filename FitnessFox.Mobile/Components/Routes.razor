@@ -1,6 +1,15 @@
-﻿<Router AppAssembly="@typeof(MauiProgram).Assembly">
+﻿@using FitnessFox.Components.Components.Account.Shared
+@using FitnessFox.Components.Components
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+
+<Router AppAssembly="typeof(MauiProgram).Assembly" AdditionalAssemblies="new[]{typeof(FitnessFox.Components.Components.Layout.MainLayout).Assembly}">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(FitnessFox.Components.Components.Layout.MainLayout)">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>
