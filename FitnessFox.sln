@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessFox", "FitnessFox\Fi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessFox.Components", "FitnessFox.Components\FitnessFox.Components.csproj", "{1B242B57-7E3D-4E09-B62B-A71315074946}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessFox.Mobile", "FitnessFox.Mobile\FitnessFox.Mobile.csproj", "{B0129A02-0C7F-469D-AD0D-A1365936254A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,12 @@ Global
 		{1B242B57-7E3D-4E09-B62B-A71315074946}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B242B57-7E3D-4E09-B62B-A71315074946}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B242B57-7E3D-4E09-B62B-A71315074946}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0129A02-0C7F-469D-AD0D-A1365936254A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0129A02-0C7F-469D-AD0D-A1365936254A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0129A02-0C7F-469D-AD0D-A1365936254A}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{B0129A02-0C7F-469D-AD0D-A1365936254A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0129A02-0C7F-469D-AD0D-A1365936254A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0129A02-0C7F-469D-AD0D-A1365936254A}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
