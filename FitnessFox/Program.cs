@@ -78,6 +78,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
+    .AddAdditionalAssemblies(typeof(FitnessFox.Components.Components.Layout.MainLayout).Assembly)
     .AddInteractiveServerRenderMode();
 
 // Add additional endpoints required by the Identity /Account Razor components.

@@ -1,7 +1,8 @@
 ﻿@using FitnessFox.Components.Account.Shared
-<Router AppAssembly="typeof(Program).Assembly">
+@using FitnessFox.Components.Components
+<Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[]{typeof(FitnessFox.Components.Components.Layout.MainLayout).Assembly}">
     <Found Context="routeData">
-        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Components.Layout.MainLayout)" >
             <NotAuthorized>
                 <RedirectToLogin />
             </NotAuthorized>
