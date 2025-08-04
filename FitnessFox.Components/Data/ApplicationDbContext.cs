@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FitnessFox.Data
 {
+
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
     {
         public DbSet<UserVital> UserVitals { get; set; }
@@ -14,6 +15,8 @@ namespace FitnessFox.Data
         public DbSet<RecipeFood> RecipeFoods { get; set; }
         public DbSet<UserMeal> UserMeals { get; set; }
         public DbSet<ApplicationUser> Users { get; set; }
+
+        public DbSet<UserSetting> UserSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
