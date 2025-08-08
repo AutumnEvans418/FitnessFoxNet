@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FitnessFox.Data
 {
-
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
     {
         public DbSet<UserVital> UserVitals { get; set; }

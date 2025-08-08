@@ -1,4 +1,6 @@
-﻿using FitnessFox.Data;
+﻿using FitnessFox.Components.Services;
+using FitnessFox.Data;
+using FitnessFox.Mobile.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,6 +20,10 @@ namespace FitnessFox.Mobile
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
             builder.Services.AddScoped<AuthenticationStateProvider, ApplicationDbContextStateProvider>();
+
+            builder.Services.AddScoped<IGoogleSyncService, GoogleSyncService>();
+            builder.Services.AddScoped<IFileService, MauiFileService>();
+
             builder.Services.AddAuthorizationCore();
 
             builder.Services.AddMauiBlazorWebView();

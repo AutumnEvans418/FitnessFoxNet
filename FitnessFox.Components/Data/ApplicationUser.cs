@@ -1,8 +1,7 @@
 
 namespace FitnessFox.Data
 {
-    // Add profile data for application users by adding properties to the ApplicationUser class
-    public class ApplicationUser //: IdentityUser
+    public class ApplicationUser
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string? UserName { get; set; }

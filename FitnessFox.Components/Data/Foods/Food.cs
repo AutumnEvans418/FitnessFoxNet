@@ -2,7 +2,7 @@ using Microsoft.VisualBasic;
 
 namespace FitnessFox.Data.Foods
 {
-    public class Food : Nutrients
+    public class Food : Nutrients, IEntityId
     {
         public int Id { get; set; }
         public string UserId { get; set; } = null!;
