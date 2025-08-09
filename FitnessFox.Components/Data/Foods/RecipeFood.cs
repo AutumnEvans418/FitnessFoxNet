@@ -1,6 +1,6 @@
 namespace FitnessFox.Data.Foods
 {
-    public class RecipeFood
+    public class RecipeFood : IEntityId, IEntityAudit
     {
         public int Id { get; set; }
         public int RecipeId { get; set; }
@@ -8,7 +8,8 @@ namespace FitnessFox.Data.Foods
         public float Amount { get; set; }
         public Recipe? Recipe { get; set; }
         public Food? Food { get; set; }
-
+        public DateTime DateCreated { get; set; }
+        public DateTime DateModified { get; set; }
         public string ServingUnitDisplay => $"{MathF.Round(Amount * Food?.ServingSize ?? 0, 2)} {Food?.ServingUnit}";
 
     }

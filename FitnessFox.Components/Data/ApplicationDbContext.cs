@@ -14,7 +14,6 @@ namespace FitnessFox.Data
         public DbSet<RecipeFood> RecipeFoods { get; set; }
         public DbSet<UserMeal> UserMeals { get; set; }
         public DbSet<ApplicationUser> Users { get; set; }
-
         public DbSet<UserSetting> UserSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -30,6 +29,38 @@ namespace FitnessFox.Data
             });
 
             base.OnModelCreating(builder);
+        }
+
+        void UpdateState()
+        {
+            var entries = ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is IEntityAudit && (
+                        e.State == EntityState.Added
+                        || e.State == EntityState.Modified));
+
+            foreach (var entityEntry in entries)
+            {
+                ((IEntityAudit)entityEntry.Entity).DateModified = DateTime.Now;
+
+                if (entityEntry.State == EntityState.Added)
+                {
+                    ((IEntityAudit)entityEntry.Entity).DateCreated = DateTime.Now;
+                }
+            }
+        }
+
+
+        public override int SaveChanges()
+        {
+            UpdateState();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            UpdateState();
+            return base.SaveChangesAsync(cancellationToken);
         }
     }
 }

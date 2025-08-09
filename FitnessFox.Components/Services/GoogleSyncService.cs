@@ -126,7 +126,7 @@ namespace FitnessFox.Components.Services
 
         }
 
-        async Task SyncDbSet<T>(SheetsService service, Spreadsheet sheet) where T : class, IEntityId
+        async Task SyncDbSet<T>(SheetsService service, Spreadsheet sheet) where T : class, IEntityId, IEntityAudit
         {
             var name = typeof(T).Name;
             var dbData = await applicationDbContext.Set<T>().ToListAsync();
@@ -135,44 +135,55 @@ namespace FitnessFox.Components.Services
 
 
             //add to db
-            var missingSheetInfo = sheetData.Where(s => !dbData.Select(d => d.Id).Contains(s.Id)).ToList();
+            await UpdateDatabase(dbData, sheetData);
 
-            await applicationDbContext.AddRangeAsync(missingSheetInfo);
-            await applicationDbContext.SaveChangesAsync();
+            var sheetDataToSend = sheetData.ToList();
+
+            //update sheet
+            var updatedSheetInfo = (
+                from sheetItem in sheetData
+                join dbRow in dbData on sheetItem.Id equals dbRow.Id
+                select dbRow.DateModified > sheetItem.DateModified ? dbRow : sheetItem).ToList();
+
+            sheetDataToSend.AddRange(updatedSheetInfo);
 
             //add to sheet
             var missingDbInfo = dbData.Where(d => !sheetData.Select(s => s.Id).Contains(d.Id)).ToList();
+            sheetDataToSend.AddRange(missingDbInfo);
+
+            sheetDataToSend.Sort((a,b) => a.Id < b.Id ? 1 : -1);
+
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+            config.IgnoreReferences = true;
+
+            
 
             var range = new ValueRange();
 
             range.Values = new List<IList<object>>();
 
-            var hasHeader = sheet.Sheets.First(s => s.Properties.Title == name).Data.First().RowData.Any();
+            var request = service.Spreadsheets.Values.Update(range, SpreadsheetId, $"{name}!A1");
 
-            if (!hasHeader)
-            {
-
-            }
-
-            var request = service.Spreadsheets.Values.Append(range, SpreadsheetId, $"{name}!A1");
-
-            request.ValueInputOption = SpreadsheetsResource.ValuesResource.AppendRequest.ValueInputOptionEnum.USERENTERED;
-            request.InsertDataOption = SpreadsheetsResource.ValuesResource.AppendRequest.InsertDataOptionEnum.INSERTROWS;
+            request.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
 
             await request.ExecuteAsync();
+        }
 
-            Console.WriteLine();
-            
-            
-            //var range = $"{sheet}!C2";
-            //var valueRange = new ValueRange();
+        private async Task UpdateDatabase<T>(List<T> dbData, List<T> sheetData) where T : class, IEntityId, IEntityAudit
+        {
+            var missingSheetInfo = sheetData.Where(s => !dbData.Select(d => d.Id).Contains(s.Id)).ToList();
 
-            //var oblist = new List<object>() { 3 };
-            //valueRange.Values = new List<IList<object>> { oblist };
+            await applicationDbContext.AddRangeAsync(missingSheetInfo);
 
-            //var updateRequest = service.Spreadsheets.Values.Update(valueRange, SpreadsheetId, range);
-            //updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
-            //var appendReponse = updateRequest.Execute();
+            var updatedSheetInfo = (
+                from dbRow in dbData
+                join sheet in sheetData on dbRow.Id equals sheet.Id
+                where sheet.DateModified > dbRow.DateModified
+                select sheet).ToList();
+
+            applicationDbContext.UpdateRange(updatedSheetInfo);
+
+            await applicationDbContext.SaveChangesAsync();
         }
 
         async Task AddWorksheets(SheetsService service, Spreadsheet sheets, string[] sheetNames)

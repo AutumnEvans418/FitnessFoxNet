@@ -51,7 +51,6 @@ namespace FitnessFox.Tests
             var db = new ApplicationDbContext(options);
 
             db.Database.EnsureCreated();
-
             fixture.Inject(db);
 
             var file = fixture.Freeze<IFileService>();

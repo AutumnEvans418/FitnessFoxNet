@@ -1,9 +1,10 @@
 namespace FitnessFox.Data.Foods
 {
-    public class Recipe : Nutrients
+    public class Recipe : Nutrients, IEntityId, IEntityAudit
     {
         public int Id { get; set; }
-        public DateTime DateTime { get; set; } = DateTime.Now;
+        public DateTime DateCreated { get; set; }
+        public DateTime DateModified { get; set; }
         public string Name { get; set; } = null!;
         public float NumberOfPeople { get; set; } = 1;
         public string UserId { get; set; } = null!;
