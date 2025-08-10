@@ -7,7 +7,7 @@ Console.WriteLine("Hello, World!");
 
 
 //var testImagePath = "C:\\Users\\autumn\\source\\repos\\FitnessFox\\FitnessFox.Tests\\data\\20250809_164658.jpg";
-var testImagePath = @"C:\Users\autumn\source\repos\FitnessFox\FitnessFox.Tests\data\20250420_154553.jpg";
+var testImagePath = @"C:\Users\autumn\source\repos\FitnessFox\FitnessFox.Tests\data\20250420_154553-2.jpg";
 
 try
 {
@@ -25,14 +25,14 @@ try
         options, false);
 
     using var img2 = Pix.LoadFromFile(testImagePath);
-    using var img1 = img2.Rotate90(1);
-    using var img = img1.Deskew(); 
+    //using var img = img2.Rotate90(1);
+    using var img = img2.Deskew();
     
-    using var page = engine.Process(img);
+    using var page = engine.Process(img, PageSegMode.SingleColumn);
     var text = page.GetText();
     Console.WriteLine("Mean confidence: {0}", page.GetMeanConfidence());
 
-    Console.WriteLine("Text (GetText): \r\n{0}", text);
+    Console.WriteLine("Text (GetText): \r\n{0}", text.Replace("\n\n", "\n"));
     //Console.WriteLine("Text (iterator):");
     //using var iter = page.GetIterator();
     //iter.Begin();

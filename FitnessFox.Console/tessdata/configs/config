@@ -1,7 +1,6 @@
-load_system_dawg F
-load_freq_dawg F
+load_system_dawg     F
+load_freq_dawg       F
 user_words_suffix    user-words
 user_patterns_suffix user-patterns
-language_model_penalty_non_dict_word 0.5
-#tessedit_char_whitelist ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890123456789.
-tessedit_write_images T
+language_model_penalty_non_dict_word	0.5
+tessedit_write_images	T
