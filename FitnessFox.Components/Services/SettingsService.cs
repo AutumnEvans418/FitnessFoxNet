@@ -12,12 +12,14 @@ using System.Threading.Tasks;
 namespace FitnessFox.Components.Services
 {
 
-    public class SettingsService
+    public class SettingsService : ISettingsService
     {
         private readonly ApplicationDbContext applicationDbContext;
         private readonly IAuthenticationService authenticationService;
 
-        public SettingsService(ApplicationDbContext applicationDbContext, IAuthenticationService authenticationService)
+        public SettingsService(
+            ApplicationDbContext applicationDbContext, 
+            IAuthenticationService authenticationService)
         {
             this.applicationDbContext = applicationDbContext;
             this.authenticationService = authenticationService;
@@ -25,15 +27,45 @@ namespace FitnessFox.Components.Services
         public async Task<string?> GetValue(string key)
         {
             var user = await authenticationService.GetUserAsync();
+            if (user == null)
+                return null;
 
-            return applicationDbContext.UserSettings.First(x => x.Key == key && user.Id == x.UserId).Value;
+            return applicationDbContext.UserSettings.Find(key, user.Id)?.Value;
         }
 
         public async Task SetValue(string key, string value)
         {
             var user = await authenticationService.GetUserAsync();
+            if (user == null)
+                return;
 
+            var setting = applicationDbContext.UserSettings.Find(key, user.Id);
+            if (setting != null)
+            {
+                setting.Value = value;
+            }
+            else
+            {
+                setting = new()
+                {
+                    Id = key,
+                    UserId = user.Id,
+                    Value = value,
+                };
+                applicationDbContext.UserSettings.Add(setting);
+            }
 
+            await applicationDbContext.SaveChangesAsync();
+        }
+
+        public async Task<Dictionary<string, string?>> GetKeys()
+        {
+            var user = await authenticationService.GetUserAsync();
+            if (user == null)
+                return [];
+
+            var settings = await applicationDbContext.UserSettings.Where(u => u.UserId == user.Id).ToDictionaryAsync(u => u.Id, u => u.Value);
+            return settings;
         }
     }
 }

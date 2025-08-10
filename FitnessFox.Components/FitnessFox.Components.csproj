@@ -21,6 +21,7 @@
 		<!--<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.16" />-->
 		<PackageReference Include="CsvHelper" Version="33.1.0" />
 		<PackageReference Include="Google.Apis.Sheets.v4" Version="1.70.0.3819" />
+		<PackageReference Include="IronOcr" Version="2025.7.19" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.*" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.*" />
 

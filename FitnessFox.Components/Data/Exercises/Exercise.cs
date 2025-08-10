@@ -1,7 +1,7 @@
 ﻿
 namespace FitnessFox.Data.Exercises
 {
-    public class Exercise : IEntityId, IEntityAudit
+    public class Exercise : IEntityId<int>, IEntityAudit
     {
         public int Id { get; set; }
         public string UserId { get; set; } = null!;

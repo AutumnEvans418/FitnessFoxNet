@@ -1,7 +1,9 @@
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace FitnessFox.Data
 {
-    public class ApplicationUser : IEntityAudit
+    public class ApplicationUser : IEntityAudit, IEntityId<string>
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string? UserName { get; set; }

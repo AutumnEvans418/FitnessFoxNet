@@ -1,7 +1,7 @@
 namespace FitnessFox.Data
 {
-    public interface IEntityId
+    public interface IEntityId<T>
     {
-        public int Id { get; set; }
+        public T Id { get; set; }
     }
 }

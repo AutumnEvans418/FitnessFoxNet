@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FitnessFox.Data.Foods
 {
-    public class UserMeal : Nutrients, IEntityAudit, IEntityId
+    public class UserMeal : Nutrients, IEntityAudit, IEntityId<int>
     {
         public int Id { get; set; }
         public string UserId { get; set; } = null!;

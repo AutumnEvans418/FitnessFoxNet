@@ -28,6 +28,8 @@ namespace FitnessFox.Data
                 b.ToTable("AspNetUsers");
             });
 
+            builder.Entity<UserSetting>().HasKey(a => new {a.Id, a.UserId});
+
             base.OnModelCreating(builder);
         }
 

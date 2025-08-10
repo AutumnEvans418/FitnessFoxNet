@@ -1,6 +1,6 @@
 namespace FitnessFox.Data.Vitals
 {
-    public class UserVital : IEntityAudit, IEntityId
+    public class UserVital : IEntityAudit, IEntityId<int>
     {
         public int Id { get; set; }
         public string UserId { get; set; } = null!;

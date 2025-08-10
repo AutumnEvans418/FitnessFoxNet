@@ -62,7 +62,14 @@ namespace FitnessFox.Components.Services
 
             await AddWorksheets(service, sheet, names);
 
-            await SyncDbSet<Food>(service, sheet);
+            await SyncDbSet<ApplicationUser, string>(service, sheet);
+            await SyncDbSet<Food, int>(service, sheet);
+            await SyncDbSet<RecipeFood, int>(service, sheet);
+            await SyncDbSet<Recipe, int>(service, sheet);
+            await SyncDbSet<UserMeal, int>(service, sheet);
+            await SyncDbSet<UserVital, int>(service, sheet);
+            await SyncDbSet<UserGoal, int>(service, sheet);
+            await SyncDbSet<UserSetting, string>(service, sheet);
         }
 
         public async Task<Spreadsheet> GetSheet(SheetsService service)
@@ -91,12 +98,11 @@ namespace FitnessFox.Components.Services
 
         public async Task<List<T>> GetData<T>(Spreadsheet sheet) where T : class
         {
-            //var entityType = applicationDbContext.Model.FindEntityType(typeof(T)) ?? throw new Exception();
-
-            //var properties = entityType.GetProperties();
-
             var name = typeof(T).Name;
             var sheetData = sheet.Sheets.First(s => s.Properties.Title == name).Data.First();
+
+            if (sheetData.RowData == null)
+                return [];
 
             var builder = new StringBuilder();
 
@@ -108,6 +114,8 @@ namespace FitnessFox.Components.Services
 
             var config = new CsvConfiguration(CultureInfo.InvariantCulture);
             config.IgnoreReferences = true;
+            config.HeaderValidated = null;
+            config.MissingFieldFound = null;
 
             using (var stream = new MemoryStream())
             using (var streamReader = new StreamReader(stream))
@@ -126,18 +134,17 @@ namespace FitnessFox.Components.Services
 
         }
 
-        async Task SyncDbSet<T>(SheetsService service, Spreadsheet sheet) where T : class, IEntityId, IEntityAudit
+        async Task SyncDbSet<T, S>(SheetsService service, Spreadsheet sheet) where T : class, IEntityId<S>, IEntityAudit
         {
             var name = typeof(T).Name;
             var dbData = await applicationDbContext.Set<T>().ToListAsync();
 
             var sheetData = await GetData<T>(sheet);
 
-
             //add to db
-            await UpdateDatabase(dbData, sheetData);
+            await UpdateDatabase<T,S>(dbData, sheetData);
 
-            var sheetDataToSend = sheetData.ToList();
+            var sheetDataToSend = sheetData.Where(s => !dbData.Select(d => d.Id).Contains(s.Id)).ToList();
 
             //update sheet
             var updatedSheetInfo = (
@@ -151,16 +158,39 @@ namespace FitnessFox.Components.Services
             var missingDbInfo = dbData.Where(d => !sheetData.Select(s => s.Id).Contains(d.Id)).ToList();
             sheetDataToSend.AddRange(missingDbInfo);
 
-            sheetDataToSend.Sort((a,b) => a.Id < b.Id ? 1 : -1);
+            var entityType = applicationDbContext.Model.FindEntityType(typeof(T)) ?? throw new Exception();
 
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture);
-            config.IgnoreReferences = true;
+            var properties = entityType.GetProperties();
 
-            
+            var range = new ValueRange
+            {
+                Values = []
+            };
 
-            var range = new ValueRange();
 
-            range.Values = new List<IList<object>>();
+            var header = new List<object>();
+            //create header
+            foreach (var item in properties)
+            {
+                header.Add(item.Name);
+            }
+
+            range.Values.Add(header);
+
+            var type = typeof(T);
+
+            //rows
+            foreach (var item in sheetDataToSend)
+            {
+                var row = new List<object>();
+
+                foreach (var property in properties)
+                {
+                    row.Add(type.GetProperty(property.Name).GetValue(item));
+                }
+
+                range.Values.Add(row);
+            }
 
             var request = service.Spreadsheets.Values.Update(range, SpreadsheetId, $"{name}!A1");
 
@@ -169,7 +199,7 @@ namespace FitnessFox.Components.Services
             await request.ExecuteAsync();
         }
 
-        private async Task UpdateDatabase<T>(List<T> dbData, List<T> sheetData) where T : class, IEntityId, IEntityAudit
+        private async Task UpdateDatabase<T,S>(List<T> dbData, List<T> sheetData) where T : class, IEntityId<S>, IEntityAudit
         {
             var missingSheetInfo = sheetData.Where(s => !dbData.Select(d => d.Id).Contains(s.Id)).ToList();
 
