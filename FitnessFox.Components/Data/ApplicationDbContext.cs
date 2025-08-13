@@ -1,3 +1,4 @@
+using FitnessFox.Components.Data.Settings;
 using FitnessFox.Data.Foods;
 using FitnessFox.Data.Goals;
 using FitnessFox.Data.Vitals;

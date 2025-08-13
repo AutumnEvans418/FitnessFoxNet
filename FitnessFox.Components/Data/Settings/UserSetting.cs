@@ -1,5 +1,16 @@
-namespace FitnessFox.Data
+using FitnessFox.Data;
+using System.ComponentModel.DataAnnotations;
+
+namespace FitnessFox.Components.Data.Settings
 {
+    public enum SettingKey
+    {
+        [Display(Name = "Google Spreadsheet Id")]
+        SpreadsheetId,
+        [Display(Name = "Sync on Start")]
+        SyncOnStart
+    }
+
     public class UserSetting : IEntityAudit, IEntityId<string>
     {
         public string Id { get; set; } = null!;

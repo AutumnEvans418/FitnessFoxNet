@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using FitnessFox.Components.Services
 @using FitnessFox.Data.Goals
 @using FitnessFox.Data.Vitals
 
@@ -6,7 +7,8 @@
 @inject ApplicationDbContext dbContext
 @inject AuthenticationStateProvider stateProvider
 @inject ISnackbar Snackbar
-
+@inject ISettingsService settingsService
+@inject IGoogleSyncService googleSyncService
 <PageTitle>Home</PageTitle>
 <MudGrid>
     <MudItem xs="12" sm="12" md="12">
@@ -86,6 +88,13 @@
     {
         if (!firstRender)
             return;
+
+        var shouldSync = await settingsService.GetValue(Data.Settings.SettingKey.SyncOnStart);
+        if (shouldSync == "true")
+        {
+            await googleSyncService.Sync();
+            Snackbar.Add("Synced!");
+        }
 
         await Refresh();
 

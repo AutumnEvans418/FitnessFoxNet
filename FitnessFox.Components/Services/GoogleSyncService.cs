@@ -1,6 +1,8 @@
 ﻿using Azure.Core;
 using CsvHelper;
 using CsvHelper.Configuration;
+using FitnessFox.Components.Data.Options;
+using FitnessFox.Components.Data.Settings;
 using FitnessFox.Data;
 using FitnessFox.Data.Foods;
 using FitnessFox.Data.Goals;
@@ -20,27 +22,25 @@ using System.Threading.Tasks;
 
 namespace FitnessFox.Components.Services
 {
-    public class GoogleOptions
-    {
-        public string FileName { get; set; } = "fitnessfox-467923-9857f7a3ab7e.json";
-    }
     public class GoogleSyncService : IGoogleSyncService
     {
         private readonly IFileService fileService;
         private readonly ApplicationDbContext applicationDbContext;
         private readonly IOptions<GoogleOptions> options;
+        private readonly ISettingsService settingsService;
         string[] Scopes = { SheetsService.Scope.Spreadsheets };
         string ApplicationName = "FitnessFox";
-        string SpreadsheetId = "1nrJfqZ-0mWHS9ChBthiyvPomOafk-46wepEVUm6g8hw";
 
         public GoogleSyncService(
             IFileService fileService,
             ApplicationDbContext applicationDbContext,
-            IOptions<GoogleOptions> options)
+            IOptions<GoogleOptions> options,
+            ISettingsService settingsService)
         {
             this.fileService = fileService;
             this.applicationDbContext = applicationDbContext;
             this.options = options;
+            this.settingsService = settingsService;
         }
 
         public async Task Sync()
@@ -74,7 +74,9 @@ namespace FitnessFox.Components.Services
 
         public async Task<Spreadsheet> GetSheet(SheetsService service)
         {
-            var sheetRequest = service.Spreadsheets.Get(SpreadsheetId);
+            var spreadSheetId = await settingsService.GetValue(SettingKey.SpreadsheetId);
+
+            var sheetRequest = service.Spreadsheets.Get(spreadSheetId);
 
             sheetRequest.IncludeGridData = true;
 
@@ -191,8 +193,9 @@ namespace FitnessFox.Components.Services
 
                 range.Values.Add(row);
             }
+            var spreadSheetId = await settingsService.GetValue(SettingKey.SpreadsheetId);
 
-            var request = service.Spreadsheets.Values.Update(range, SpreadsheetId, $"{name}!A1");
+            var request = service.Spreadsheets.Values.Update(range, spreadSheetId, $"{name}!A1");
 
             request.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
 
@@ -232,7 +235,9 @@ namespace FitnessFox.Components.Services
 
             if (request.Requests.Count > 0)
             {
-                await service.Spreadsheets.BatchUpdate(request, SpreadsheetId).ExecuteAsync();
+                var spreadSheetId = await settingsService.GetValue(SettingKey.SpreadsheetId);
+
+                await service.Spreadsheets.BatchUpdate(request, spreadSheetId).ExecuteAsync();
             }
         }
     }

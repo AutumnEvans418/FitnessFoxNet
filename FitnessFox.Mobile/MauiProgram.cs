@@ -22,7 +22,9 @@ namespace FitnessFox.Mobile
             builder.Services.AddScoped<AuthenticationStateProvider, ApplicationDbContextStateProvider>();
 
             builder.Services.AddScoped<IGoogleSyncService, GoogleSyncService>();
+            builder.Services.AddScoped<ISettingsService, SettingsService>();
             builder.Services.AddScoped<IFileService, MauiFileService>();
+            builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
             builder.Services.AddAuthorizationCore();
 
@@ -44,7 +46,7 @@ namespace FitnessFox.Mobile
             using var scope = app.Services.CreateScope();
 
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            db.Database.EnsureDeleted();
+            //db.Database.EnsureDeleted();
             db.Database.EnsureCreated();
 
             return app;

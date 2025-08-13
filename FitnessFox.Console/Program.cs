@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using FitnessFox.Components.Services;
+using OpenCvSharp;
 using System.Diagnostics;
 using Tesseract;
 
@@ -7,65 +8,74 @@ Console.WriteLine("Hello, World!");
 
 
 //var testImagePath = "C:\\Users\\autumn\\source\\repos\\FitnessFox\\FitnessFox.Tests\\data\\20250809_164658.jpg";
-var testImagePath = @"C:\Users\autumn\source\repos\FitnessFox\FitnessFox.Tests\data\20250420_154553-2.jpg";
+var testImagePath = @"C:\Users\autumn\source\repos\FitnessFox\FitnessFox.Tests\data\20250420_154553-1.jpg";
+
+static byte[] Preprocess(string testImagePath)
+{
+    using var t = new ResourcesTracker();
+
+    using var img = t.T(new Mat(testImagePath))
+        .CvtColor(ColorConversionCodes.BGR2GRAY)
+        .Threshold(128, 255, ThresholdTypes.Binary | ThresholdTypes.Otsu);
+
+    using var kernel = Cv2.GetStructuringElement(MorphShapes.Rect, new Size(25, 1));
+
+    var dest = t.NewMat();
+    Cv2.MorphologyEx(img, dest, MorphTypes.Open, kernel, iterations: 2);
+
+    //Cv2.FindContours(dest, out var cnts, null, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
+
+    //Mat cnts1;
+
+    //if(cnts.Length == 2)
+    //{
+    //    cnts1 = cnts[0];
+    //}
+    //else
+    //{
+    //    cnts1 = cnts[1];
+    //}
+
+    //foreach (var item in cnts1.)
+    //{
+        
+    //}
+
+    //var dest = t.NewMat();
+
+    //Cv2.Resize(img, dest, new Size() { Height = 100, Width = 100 });
+
+    //Cv2.ConvertScaleAbs(img, dest, alpha:1.5);
+
+    t.T(new Window("resize", dest));
+
+    Cv2.WaitKey();
+
+    return img.ToBytes();
+}
+
+var img = Preprocess(testImagePath);
+
 
 try
 {
     var options = new Dictionary<string, object>();
-    //{
-    //    {"tessedit_write_images", true },
-    //    {"load_system_dawg", false }
-    //};
 
     using var engine = new TesseractEngine(
-        @"./tessdata", 
-        "eng", 
-        EngineMode.Default, 
-        ["./tessdata/configs/config"], 
+        @"./tessdata",
+        "eng",
+        EngineMode.Default,
+        ["./tessdata/configs/config"],
         options, false);
 
-    using var img2 = Pix.LoadFromFile(testImagePath);
-    //using var img = img2.Rotate90(1);
-    using var img = img2.Deskew();
     
-    using var page = engine.Process(img, PageSegMode.SingleColumn);
+    using var img1 = Pix.LoadFromMemory(img).Rotate90(1).Deskew();
+
+    using var page = engine.Process(img1);
     var text = page.GetText();
     Console.WriteLine("Mean confidence: {0}", page.GetMeanConfidence());
 
     Console.WriteLine("Text (GetText): \r\n{0}", text.Replace("\n\n", "\n"));
-    //Console.WriteLine("Text (iterator):");
-    //using var iter = page.GetIterator();
-    //iter.Begin();
-
-    //do
-    //{
-    //    do
-    //    {
-    //        do
-    //        {
-    //            do
-    //            {
-    //                if (iter.IsAtBeginningOf(PageIteratorLevel.Block))
-    //                {
-    //                    Console.WriteLine("<BLOCK>");
-    //                }
-
-    //                Console.Write(iter.GetText(PageIteratorLevel.Word));
-    //                Console.Write(" ");
-
-    //                if (iter.IsAtFinalOf(PageIteratorLevel.TextLine, PageIteratorLevel.Word))
-    //                {
-    //                    Console.WriteLine();
-    //                }
-    //            } while (iter.Next(PageIteratorLevel.TextLine, PageIteratorLevel.Word));
-
-    //            if (iter.IsAtFinalOf(PageIteratorLevel.Para, PageIteratorLevel.TextLine))
-    //            {
-    //                Console.WriteLine();
-    //            }
-    //        } while (iter.Next(PageIteratorLevel.Para, PageIteratorLevel.TextLine));
-    //    } while (iter.Next(PageIteratorLevel.Block, PageIteratorLevel.Para));
-    //} while (iter.Next(PageIteratorLevel.Block));
 }
 catch (Exception e)
 {
@@ -74,3 +84,4 @@ catch (Exception e)
     Console.WriteLine("Details: ");
     Console.WriteLine(e.ToString());
 }
+Console.ReadLine();

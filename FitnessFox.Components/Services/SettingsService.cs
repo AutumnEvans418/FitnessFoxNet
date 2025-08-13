@@ -1,4 +1,5 @@
-﻿using FitnessFox.Data;
+﻿using FitnessFox.Components.Data.Settings;
+using FitnessFox.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -24,7 +25,7 @@ namespace FitnessFox.Components.Services
             this.applicationDbContext = applicationDbContext;
             this.authenticationService = authenticationService;
         }
-        public async Task<string?> GetValue(string key)
+        public async Task<string?> GetValue(string? key)
         {
             var user = await authenticationService.GetUserAsync();
             if (user == null)
@@ -33,7 +34,7 @@ namespace FitnessFox.Components.Services
             return applicationDbContext.UserSettings.Find(key, user.Id)?.Value;
         }
 
-        public async Task SetValue(string key, string value)
+        public async Task SetValue(string key, string? value)
         {
             var user = await authenticationService.GetUserAsync();
             if (user == null)
@@ -66,6 +67,16 @@ namespace FitnessFox.Components.Services
 
             var settings = await applicationDbContext.UserSettings.Where(u => u.UserId == user.Id).ToDictionaryAsync(u => u.Id, u => u.Value);
             return settings;
+        }
+
+        public Task<string?> GetValue(SettingKey key)
+        {
+            return GetValue(key.ToString());
+        }
+
+        public Task SetValue(SettingKey key, string? value)
+        {
+            return SetValue(key.ToString(), value);
         }
     }
 }

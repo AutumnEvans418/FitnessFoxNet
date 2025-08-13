@@ -1,12 +1,84 @@
 ﻿@page "/settings"
+@using FitnessFox.Components.Data.Options
+@using FitnessFox.Components.Data.Settings
 @using FitnessFox.Components.Services
+@using Microsoft.Extensions.Options
 @inject IGoogleSyncService googleSyncService
+@inject ISettingsService settingsService
+@inject IOptions<GoogleOptions> googleOptions
+@inject ISnackbar Snackbar
+@inject IDialogService dialogService
+@inject ApplicationDbContext applicationDbContext
 <h3>Settings</h3>
 
-<MudButton OnClick="Sync">Sync to Google</MudButton>
+<MudText>To sync your local data to Google sheets, add the sheet id (in the url) and share the sheet with this email: @googleOptions.Value.UserEmail</MudText>
+<MudButton Disabled="IsLoading" OnClick="Sync">Sync to Google</MudButton>
+<MudButton Disabled="IsLoading" OnClick="ClearDb">Clear Database</MudButton>
+
+<MudGrid>
+    @foreach (var key in Keys)
+    {
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Style="padding: 10px">
+                @{
+                    var name = key.GetAttribute<DisplayAttribute>();
+                }
+                <MudTextField T="string" 
+                    Disabled="IsLoading"
+                    Label="@name?.Name"
+                    ValueChanged="a => settingsService.SetValue(key, a?.ToString())"
+                    Value="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()] : "")">
+
+                </MudTextField>
+            </MudPaper>
+        </MudItem>
+    }
+</MudGrid>
+
 @code {
+    public List<SettingKey> Keys { get; set; } = Enum.GetValues<SettingKey>().ToList();
+    public Dictionary<string, string?> KeyValues { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+    }
+
+    public async Task Refresh()
+    {
+        KeyValues = await settingsService.GetKeys();
+    }
+
     public async Task Sync()
     {
-        await googleSyncService.Sync();
+        try
+        {
+            IsLoading = true;
+            StateHasChanged();
+            await googleSyncService.Sync();
+            Snackbar.Add("Synced!");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            await Refresh();
+            StateHasChanged();
+            IsLoading = false;
+        }
+    }
+    private async Task ClearDb()
+    {
+        var result = await dialogService.ShowMessageBox("Confirm", "Are you sure you want to delete ALL local data?", "Yes", "No");
+        if (result == true)
+        {
+            applicationDbContext.Database.EnsureDeleted();
+            applicationDbContext.Database.EnsureCreated();
+            await Refresh();
+            StateHasChanged();
+        }
     }
 }
