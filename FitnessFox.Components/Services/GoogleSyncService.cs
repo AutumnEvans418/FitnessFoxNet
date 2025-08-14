@@ -74,7 +74,7 @@ namespace FitnessFox.Components.Services
 
         public async Task<Spreadsheet> GetSheet(SheetsService service)
         {
-            var spreadSheetId = await settingsService.GetValue(SettingKey.SpreadsheetId);
+            var spreadSheetId = await settingsService.GetValue<string?>(SettingKey.SpreadsheetId);
 
             var sheetRequest = service.Spreadsheets.Get(spreadSheetId);
 
@@ -193,7 +193,7 @@ namespace FitnessFox.Components.Services
 
                 range.Values.Add(row);
             }
-            var spreadSheetId = await settingsService.GetValue(SettingKey.SpreadsheetId);
+            var spreadSheetId = await settingsService.GetValue<string?>(SettingKey.SpreadsheetId);
 
             var request = service.Spreadsheets.Values.Update(range, spreadSheetId, $"{name}!A1");
 
@@ -235,7 +235,7 @@ namespace FitnessFox.Components.Services
 
             if (request.Requests.Count > 0)
             {
-                var spreadSheetId = await settingsService.GetValue(SettingKey.SpreadsheetId);
+                var spreadSheetId = await settingsService.GetValue<string?>(SettingKey.SpreadsheetId);
 
                 await service.Spreadsheets.BatchUpdate(request, spreadSheetId).ExecuteAsync();
             }

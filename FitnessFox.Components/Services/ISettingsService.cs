@@ -5,10 +5,10 @@ namespace FitnessFox.Components.Services
 {
     public interface ISettingsService
     {
-        Task<Dictionary<string, string?>> GetKeys();
-        Task<string?> GetValue(string key);
-        Task<string?> GetValue(SettingKey key);
-        Task SetValue(string key, string? value);
-        Task SetValue(SettingKey key, string? value);
+        Task<Dictionary<string, UserSetting>> GetKeys();
+        Task<T?> GetValue<T>(string key);
+        Task<T?> GetValue<T>(SettingKey key);
+        Task SetValue<T>(string key, T? value);
+        Task SetValue<T>(SettingKey key, T? value);
     }
 }

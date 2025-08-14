@@ -89,10 +89,15 @@
         if (!firstRender)
             return;
 
-        var shouldSync = await settingsService.GetValue(Data.Settings.SettingKey.SyncOnStart);
-        if (shouldSync == "true")
+        var shouldSync = await settingsService.GetValue<bool?>(Data.Settings.SettingKey.SyncOnStart);
+        var lastDate = await settingsService.GetValue<DateTime?>(Data.Settings.SettingKey.SyncLastDate);
+
+        if (shouldSync == true && (lastDate == null || lastDate < DateTime.Now.AddHours(-1)) )
         {
             await googleSyncService.Sync();
+
+            await settingsService.SetValue(Data.Settings.SettingKey.SyncLastDate, DateTime.Now);
+
             Snackbar.Add("Synced!");
         }
 

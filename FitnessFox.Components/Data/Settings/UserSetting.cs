@@ -1,16 +1,9 @@
 using FitnessFox.Data;
+using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 
 namespace FitnessFox.Components.Data.Settings
 {
-    public enum SettingKey
-    {
-        [Display(Name = "Google Spreadsheet Id")]
-        SpreadsheetId,
-        [Display(Name = "Sync on Start")]
-        SyncOnStart
-    }
-
     public class UserSetting : IEntityAudit, IEntityId<string>
     {
         public string Id { get; set; } = null!;
@@ -18,5 +11,10 @@ namespace FitnessFox.Components.Data.Settings
         public string? Value { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime DateModified { get; set; }
+
+        public T? GetValue<T>()
+        {
+            return JsonConvert.DeserializeObject<T?>(Value ?? "");
+        }
     }
 }

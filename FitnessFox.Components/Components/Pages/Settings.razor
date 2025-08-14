@@ -16,20 +16,47 @@
 <MudButton Disabled="IsLoading" OnClick="ClearDb">Clear Database</MudButton>
 
 <MudGrid>
-    @foreach (var key in Keys)
+    @foreach (var key in Keys.Where(k => k.GetAttribute<DisplayAttribute>() != null))
     {
         <MudItem xs="12" sm="6" md="4">
             <MudPaper Elevation="2" Style="padding: 10px">
                 @{
                     var name = key.GetAttribute<DisplayAttribute>();
-                }
-                <MudTextField T="string" 
-                    Disabled="IsLoading"
-                    Label="@name?.Name"
-                    ValueChanged="a => settingsService.SetValue(key, a?.ToString())"
-                    Value="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()] : "")">
 
-                </MudTextField>
+                }
+
+                @if (name?.ResourceType == typeof(string))
+                {
+                    <MudTextField T="string"
+                                  Disabled="IsLoading"
+                                  Label="@name?.Name"
+                                  ValueChanged="a => settingsService.SetValue(key, a)"
+                                  Value="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()].GetValue<string>() : "")">
+
+                    </MudTextField>
+                }
+                else if (name?.ResourceType == typeof(bool))
+                {
+                    <MudCheckBox T="bool"
+                                 Disabled="IsLoading"
+                                 Label="@name?.Name"
+                                 ValueChanged="a => settingsService.SetValue(key, a)"
+                                 Value="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()].GetValue<bool>() : false)">
+                                 
+                    </MudCheckBox>
+                }
+                else if (name?.ResourceType == typeof(DateTime))
+                {
+                    <MudDatePicker
+                        Disabled="IsLoading"
+                        Label="@name?.Name"
+                        Date="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()].GetValue<DateTime>() : DateTime.MinValue)"
+                        DateChanged="a => settingsService.SetValue(key, a)">
+                        
+                    </MudDatePicker>
+                }
+
+
             </MudPaper>
         </MudItem>
     }
@@ -37,7 +64,7 @@
 
 @code {
     public List<SettingKey> Keys { get; set; } = Enum.GetValues<SettingKey>().ToList();
-    public Dictionary<string, string?> KeyValues { get; set; } = new();
+    public Dictionary<string, UserSetting> KeyValues { get; set; } = new();
     public bool IsLoading { get; set; }
 
     protected override async Task OnInitializedAsync()

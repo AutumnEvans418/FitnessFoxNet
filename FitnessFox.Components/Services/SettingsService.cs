@@ -2,6 +2,7 @@
 using FitnessFox.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
@@ -25,16 +26,17 @@ namespace FitnessFox.Components.Services
             this.applicationDbContext = applicationDbContext;
             this.authenticationService = authenticationService;
         }
-        public async Task<string?> GetValue(string? key)
+        public async Task<T?> GetValue<T>(string? key)
         {
             var user = await authenticationService.GetUserAsync();
             if (user == null)
-                return null;
+                return default;
 
-            return applicationDbContext.UserSettings.Find(key, user.Id)?.Value;
+            var value = applicationDbContext.UserSettings.Find(key, user.Id)?.Value;
+            return JsonConvert.DeserializeObject<T?>(value ?? "");
         }
 
-        public async Task SetValue(string key, string? value)
+        public async Task SetValue<T>(string key, T? value)
         {
             var user = await authenticationService.GetUserAsync();
             if (user == null)
@@ -43,7 +45,7 @@ namespace FitnessFox.Components.Services
             var setting = applicationDbContext.UserSettings.Find(key, user.Id);
             if (setting != null)
             {
-                setting.Value = value;
+                setting.Value = JsonConvert.SerializeObject(value);
             }
             else
             {
@@ -51,7 +53,7 @@ namespace FitnessFox.Components.Services
                 {
                     Id = key,
                     UserId = user.Id,
-                    Value = value,
+                    Value = JsonConvert.SerializeObject(value),
                 };
                 applicationDbContext.UserSettings.Add(setting);
             }
@@ -59,24 +61,24 @@ namespace FitnessFox.Components.Services
             await applicationDbContext.SaveChangesAsync();
         }
 
-        public async Task<Dictionary<string, string?>> GetKeys()
+        public async Task<Dictionary<string, UserSetting>> GetKeys()
         {
             var user = await authenticationService.GetUserAsync();
             if (user == null)
                 return [];
 
-            var settings = await applicationDbContext.UserSettings.Where(u => u.UserId == user.Id).ToDictionaryAsync(u => u.Id, u => u.Value);
+            var settings = await applicationDbContext.UserSettings.Where(u => u.UserId == user.Id).ToDictionaryAsync(u => u.Id, u => u);
             return settings;
         }
 
-        public Task<string?> GetValue(SettingKey key)
+        public Task<T?> GetValue<T>(SettingKey key)
         {
-            return GetValue(key.ToString());
+            return GetValue<T?>(key.ToString());
         }
 
-        public Task SetValue(SettingKey key, string? value)
+        public Task SetValue<T>(SettingKey key, T? value)
         {
-            return SetValue(key.ToString(), value);
+            return SetValue<T>(key.ToString(), value);
         }
     }
 }
