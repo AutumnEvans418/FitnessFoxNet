@@ -16,7 +16,7 @@ namespace FitnessFox.Mobile
 
         public async override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var user = await dbContext.Users.FirstOrDefaultAsync();
+            var user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync();
 
             if (user == null)
             {

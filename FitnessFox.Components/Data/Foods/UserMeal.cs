@@ -6,6 +6,7 @@ namespace FitnessFox.Data.Foods
     {
         public int Id { get; set; }
         public string UserId { get; set; } = null!;
+        public DateTime Date { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime DateModified { get; set; }
         public UserMealType Type { get; set; }

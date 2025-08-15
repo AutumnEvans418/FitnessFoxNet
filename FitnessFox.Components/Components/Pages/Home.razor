@@ -5,8 +5,8 @@
 
 @attribute [Authorize]
 @inject ApplicationDbContext dbContext
-@inject AuthenticationStateProvider stateProvider
 @inject ISnackbar Snackbar
+@inject IAuthenticationService authenticationService
 @inject ISettingsService settingsService
 @inject IGoogleSyncService googleSyncService
 <PageTitle>Home</PageTitle>
@@ -96,7 +96,7 @@
         {
             await googleSyncService.Sync();
 
-            await settingsService.SetValue(Data.Settings.SettingKey.SyncLastDate, DateTime.Now);
+            await settingsService.SetValue<DateTime?>(Data.Settings.SettingKey.SyncLastDate, DateTime.Now);
 
             Snackbar.Add("Synced!");
         }
@@ -108,23 +108,21 @@
 
     public async Task Refresh()
     {
-        var user = await stateProvider.GetAuthenticationStateAsync();
+        var user = await authenticationService.GetUserAsync();
 
-        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null)
+        if (user == null)
             return;
 
-        User = await dbContext.Users.FirstAsync(u => u.Id == userId);
+        User = user;
 
         var currentDate = CurrentDate.GetValueOrDefault().Date;
 
         Vitals = await dbContext.UserVitals
-            .Where(u => u.User.Id == userId)
-            .Where(u => u.DateCreated.Date == currentDate)
+            .Where(u => u.User.Id == user.Id)
+            .Where(u => u.Date.Date == currentDate)
             .ToListAsync();
 
-        var goals = await dbContext.UserGoals.Where(u => u.UserId == userId).ToListAsync();
+        var goals = await dbContext.UserGoals.Where(u => u.UserId == user.Id).ToListAsync();
 
         WeightGoal = goals.FirstOrDefault(g => g.Type == UserGoalType.WeightLbs);
 
@@ -132,8 +130,9 @@
         {
             return Vitals.FirstOrDefault(v => v.Type == type) ?? new()
             {
-                UserId = userId,
+                UserId = user.Id,
                 Type = type,
+                Date = currentDate,
             };
         }
 

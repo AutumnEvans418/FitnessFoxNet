@@ -49,6 +49,11 @@ namespace FitnessFox.Components.Services
 
             var sheet = await GetSheet(service);
 
+            if (sheet == null)
+            {
+                return;
+            }
+
             string[] names = [
                 nameof(ApplicationUser),
                 nameof(Food),
@@ -72,9 +77,14 @@ namespace FitnessFox.Components.Services
             await SyncDbSet<UserSetting, string>(service, sheet);
         }
 
-        public async Task<Spreadsheet> GetSheet(SheetsService service)
+        public async Task<Spreadsheet?> GetSheet(SheetsService service)
         {
             var spreadSheetId = await settingsService.GetValue<string?>(SettingKey.SpreadsheetId);
+
+            if (string.IsNullOrEmpty(spreadSheetId))
+            {
+                return null;
+            }
 
             var sheetRequest = service.Spreadsheets.Get(spreadSheetId);
 
@@ -144,7 +154,7 @@ namespace FitnessFox.Components.Services
             var sheetData = await GetData<T>(sheet);
 
             //add to db
-            await UpdateDatabase<T,S>(dbData, sheetData);
+            await UpdateDatabase<T, S>(dbData, sheetData);
 
             var sheetDataToSend = sheetData.Where(s => !dbData.Select(d => d.Id).Contains(s.Id)).ToList();
 
@@ -202,7 +212,7 @@ namespace FitnessFox.Components.Services
             await request.ExecuteAsync();
         }
 
-        private async Task UpdateDatabase<T,S>(List<T> dbData, List<T> sheetData) where T : class, IEntityId<S>, IEntityAudit
+        private async Task UpdateDatabase<T, S>(List<T> dbData, List<T> sheetData) where T : class, IEntityId<S>, IEntityAudit
         {
             var missingSheetInfo = sheetData.Where(s => !dbData.Select(d => d.Id).Contains(s.Id)).ToList();
 

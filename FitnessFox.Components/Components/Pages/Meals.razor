@@ -4,7 +4,7 @@
 
 @attribute [Authorize]
 @inject ApplicationDbContext dbContext
-@inject AuthenticationStateProvider stateProvider
+@inject IAuthenticationService authenticationService
 @inject ISnackbar Snackbar
 <MudGrid>
     <MudItem xs="12" sm="12" md="12">
@@ -103,22 +103,21 @@
 
     public async Task Refresh()
     {
-        var user = await stateProvider.GetAuthenticationStateAsync();
 
-        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var user = await authenticationService.GetUserAsync();
 
-        if (userId == null)
+        if (user == null)
             return;
 
-        User = await dbContext.Users.FirstAsync(u => u.Id == userId);
+        User = user;
 
         var currentDate = CurrentDate.GetValueOrDefault().Date;
 
-        Goals = await dbContext.UserGoals.Where(u => u.UserId == userId).ToListAsync();
+        Goals = await dbContext.UserGoals.Where(u => u.UserId == user.Id).ToListAsync();
 
         UserMeals = await dbContext
             .UserMeals
-            .Where(u => u.UserId == userId && u.DateCreated.Date == currentDate)
+            .Where(u => u.UserId == user.Id && u.Date.Date == currentDate)
             .Include(u => u.Food)
             .Include(u => u.Recipe)
             .OrderBy(p => p.Type)
@@ -137,7 +136,7 @@
     {
         var meal = new UserMeal
         {
-            DateCreated = CurrentDate.GetValueOrDefault(),
+            Date = CurrentDate.GetValueOrDefault(),
             UserId = User.Id,
             Type = type,
         };

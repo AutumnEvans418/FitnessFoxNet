@@ -3,8 +3,8 @@
 
 @attribute [Authorize]
 @inject ApplicationDbContext dbContext
-@inject AuthenticationStateProvider stateProvider
 @inject ISnackbar Snackbar
+@inject IAuthenticationService authenticationService
 <h3>Goals</h3>
 
 <MudGrid>
@@ -39,22 +39,21 @@
     public async Task Refresh()
     {
         UserGoals.Clear();
-        var user = await stateProvider.GetAuthenticationStateAsync();
 
-        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null)
+        var user = await authenticationService.GetUserAsync();
+        if (user == null)
             return;
-        User = await dbContext.Users.FirstAsync(u => u.Id == userId);
 
-        var goals = await dbContext.UserGoals.Where(u => u.UserId == userId).ToListAsync();
+        User = user;
+
+        var goals = await dbContext.UserGoals.Where(u => u.UserId == user.Id).ToListAsync();
 
         foreach (var type in GoalTypes)
         {
             var goal = goals.FirstOrDefault(u => u.Type == type) ?? new()
             {
                 Type = type,
-                UserId = userId,
+                UserId = user.Id,
             };
             UserGoals.Add(goal);
         }

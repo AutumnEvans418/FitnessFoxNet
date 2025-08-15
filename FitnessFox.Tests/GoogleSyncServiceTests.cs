@@ -1,4 +1,5 @@
 using AutoFixture;
+using FitnessFox.Components.Data.Options;
 using FitnessFox.Components.Services;
 using FitnessFox.Data;
 using FitnessFox.Data.Foods;

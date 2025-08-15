@@ -26,7 +26,7 @@ namespace FitnessFox.Components.Services
 
             if (userId == null)
                 return null;
-            return await applicationDbContext.Users.FirstAsync(u => u.Id == userId);
+            return await applicationDbContext.Users.FindAsync(userId);
         }
     }
 }

@@ -14,7 +14,10 @@ namespace FitnessFox.Components.Data.Settings
 
         public T? GetValue<T>()
         {
-            return JsonConvert.DeserializeObject<T?>(Value ?? "");
+            if (Value == null)
+                return default;
+
+            return JsonConvert.DeserializeObject<T?>(Value);
         }
     }
 }

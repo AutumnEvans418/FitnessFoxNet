@@ -9,6 +9,7 @@
 @inject ISnackbar Snackbar
 @inject IDialogService dialogService
 @inject ApplicationDbContext applicationDbContext
+@inject NavigationManager nav
 <h3>Settings</h3>
 
 <MudText>To sync your local data to Google sheets, add the sheet id (in the url) and share the sheet with this email: @googleOptions.Value.UserEmail</MudText>
@@ -30,7 +31,7 @@
                     <MudTextField T="string"
                                   Disabled="IsLoading"
                                   Label="@name?.Name"
-                                  ValueChanged="a => settingsService.SetValue(key, a)"
+                                  ValueChanged="a => SetValue(key, a)"
                                   Value="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()].GetValue<string>() : "")">
 
                     </MudTextField>
@@ -40,7 +41,7 @@
                     <MudCheckBox T="bool"
                                  Disabled="IsLoading"
                                  Label="@name?.Name"
-                                 ValueChanged="a => settingsService.SetValue(key, a)"
+                                 ValueChanged="a => SetValue(key, a)"
                                  Value="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()].GetValue<bool>() : false)">
                                  
                     </MudCheckBox>
@@ -51,7 +52,7 @@
                         Disabled="IsLoading"
                         Label="@name?.Name"
                         Date="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()].GetValue<DateTime>() : DateTime.MinValue)"
-                        DateChanged="a => settingsService.SetValue(key, a)">
+                        DateChanged="a => SetValue(key, a)">
                         
                     </MudDatePicker>
                 }
@@ -75,6 +76,12 @@
     public async Task Refresh()
     {
         KeyValues = await settingsService.GetKeys();
+    }
+
+    public async Task SetValue<T>(SettingKey key, T value)
+    {
+        await settingsService.SetValue(key, value);
+        await Refresh();
     }
 
     public async Task Sync()
@@ -104,8 +111,10 @@
         {
             applicationDbContext.Database.EnsureDeleted();
             applicationDbContext.Database.EnsureCreated();
-            await Refresh();
-            StateHasChanged();
+            nav.NavigateTo(nav.Uri, true);
+
+            // await Refresh();
+            // StateHasChanged();
         }
     }
 }
