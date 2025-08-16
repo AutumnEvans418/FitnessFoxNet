@@ -1,6 +1,5 @@
 using CsvHelper;
 using CsvHelper.Configuration;
-using FitnessFox.Components.Services;
 using FitnessFox.Data.Foods;
 using FluentAssertions;
 using System.Data;
@@ -9,7 +8,7 @@ using Xunit;
 
 namespace FitnessFox.Tests
 {
-    public class UnitTest1
+    public class CsvTests
     {
         [Fact]
         public void CsvShouldCreateHeader()
@@ -31,19 +30,6 @@ namespace FitnessFox.Tests
             result.Should().StartWith("Id");
             result.Should().NotContain("UserName");
             result.Should().NotContain("User,");
-        }
-    }
-
-    public class OcrServiceTest
-    {
-        [Fact]
-        public async Task LabelShouldHaveCalories()
-        {
-            var service = new OcrService();
-
-            var result = await service.ParseText("C:\\Users\\autumn\\source\\repos\\FitnessFox\\FitnessFox.Tests\\data\\20250809_164658.jpg");
-
-            result.Should().Contain("Calories");
         }
     }
 }

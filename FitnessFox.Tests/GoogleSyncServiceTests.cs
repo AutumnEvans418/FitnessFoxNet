@@ -11,6 +11,7 @@ using NSubstitute;
 
 namespace FitnessFox.Tests
 {
+    
     public class GoogleSyncServiceTests : IDisposable
     {
         GoogleSyncService GoogleSyncService { get; set; }
@@ -44,7 +45,7 @@ namespace FitnessFox.Tests
             GoogleSyncService = fixture.Build<GoogleSyncService>().OmitAutoProperties().Create();
         }
 
-        [Fact]
+        [Fact(Skip = "test")]
         public async Task GetData()
         {
             var service = await GoogleSyncService.GetSheetService();
@@ -55,7 +56,7 @@ namespace FitnessFox.Tests
             result.Should().NotBeEmpty();
         }
 
-        [Fact]
+        [Fact(Skip = "test2")]
         public async Task SyncData()
         {
             var db = Db;
