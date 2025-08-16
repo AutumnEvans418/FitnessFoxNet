@@ -14,53 +14,50 @@ using System.Threading.Tasks;
 
 namespace FitnessFox.Components.ViewModels.Foods
 {
-    public class AddFoodViewModel : ViewModelBase
+    public class AddRecipeViewModel : ViewModelBase
     {
-        private readonly ApplicationDbContext dbContext;
         private readonly IAuthenticationService authenticationService;
         private readonly IJSRuntime jsRuntime;
+        private readonly ApplicationDbContext dbContext;
 
-        public AddFoodViewModel(
+        public AddRecipeViewModel(
             IDialogService mudDialogInstance, 
-            ILoggingService loggingService,
-            ApplicationDbContext applicationDbContext,
+            ILoggingService loggingService, 
+            ILoadingService loadingService,
             IAuthenticationService authenticationService,
             IJSRuntime jsRuntime,
-            ILoadingService loadingService) 
-            : base(mudDialogInstance, loggingService, loadingService)
+            ApplicationDbContext dbContext) : base(mudDialogInstance, loggingService, loadingService)
         {
-            this.dbContext = applicationDbContext;
             this.authenticationService = authenticationService;
             this.jsRuntime = jsRuntime;
+            this.dbContext = dbContext;
         }
-
-        public Food? Model { get; set; }
-        public List<string> Units { get; set; } = [];
+        public Recipe? Model { get; set; }
 
         public int? Id { get; set; }
-
         public override async Task OnInitializedAsync()
         {
             await Load(Refresh);
         }
 
-        public async Task Refresh()
+        private async Task Refresh()
         {
             if (Id != null)
             {
-                Model = await dbContext.Foods.FirstAsync(f => f.Id == Id);
+                Model = await dbContext
+                    .Recipes
+                    .Include(r => r.Foods)
+                    .ThenInclude(r => r.Food)
+                    .FirstAsync(f => f.Id == Id);
             }
             Model ??= new();
-
-            Units = await dbContext.Foods.Select(f => f.ServingUnit).Distinct().ToListAsync();
         }
 
         public async Task Submit()
         {
-
             if (Model == null)
                 return;
-            
+
             var user = await authenticationService.GetUserAsync();
 
             var userId = user?.Id;
@@ -70,17 +67,33 @@ namespace FitnessFox.Components.ViewModels.Foods
 
             Model.UserId = userId;
 
-            dbContext.Foods.Update(Model);
+            Model.SetNutrients();
+
+            dbContext.Recipes.Update(Model);
             await dbContext.SaveChangesAsync();
             await jsRuntime.InvokeVoidAsync("history.back");
         }
 
-        public async Task<IEnumerable<string>> Search(string value, CancellationToken token)
+        public async Task<IEnumerable<Food>> Search(string value, CancellationToken token)
         {
-            if (string.IsNullOrWhiteSpace(value))
-                return Units;
+            var foods = dbContext.Foods.OrderBy(f => f.BrandRestaurant).AsQueryable();
 
-            return Units.Where(u => u.Contains(value, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                foods = foods.Where(f => f.BrandRestaurant.Contains(value) || f.Description.Contains(value));
+            }
+
+            var foodsList = await foods.Take(20).ToListAsync();
+
+            return foodsList
+                .OrderBy(n => n.Name)
+                .ToList();
+        }
+
+        public void IngredientUpdated()
+        {
+            Model?.SetNutrients();
+            StateHasChanged();
         }
     }
 }

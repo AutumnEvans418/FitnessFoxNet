@@ -10,7 +10,7 @@ namespace FitnessFox.Components.ViewModels
 {
     public class ViewModelBase
     {
-        private readonly IDialogService mudDialogInstance;
+        protected readonly IDialogService dialogService;
         private readonly ILoggingService loggingService;
         private readonly ILoadingService loadingService;
 
@@ -26,7 +26,7 @@ namespace FitnessFox.Components.ViewModels
             ILoggingService loggingService,
             ILoadingService loadingService)
         {
-            this.mudDialogInstance = mudDialogInstance;
+            this.dialogService = mudDialogInstance;
             this.loggingService = loggingService;
             this.loadingService = loadingService;
         }
@@ -42,7 +42,7 @@ namespace FitnessFox.Components.ViewModels
             catch (Exception ex)
             {
                 loggingService.Error(ex);
-                await mudDialogInstance.ShowMessageBox("Error", ex.ToString());
+                await dialogService.ShowMessageBox("Error", ex.ToString());
             }
             finally
             {

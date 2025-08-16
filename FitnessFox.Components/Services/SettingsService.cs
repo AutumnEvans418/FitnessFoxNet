@@ -33,7 +33,14 @@ namespace FitnessFox.Components.Services
                 return default;
 
             var value = applicationDbContext.UserSettings.Find(key, user.Id)?.Value;
-            return JsonConvert.DeserializeObject<T?>(value ?? "");
+            try
+            {
+                return JsonConvert.DeserializeObject<T?>(value ?? "");
+            }
+            catch (Exception)
+            {
+                return default;
+            }
         }
 
         public async Task SetValue<T>(string key, T? value)

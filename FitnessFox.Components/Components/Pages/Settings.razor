@@ -2,6 +2,7 @@
 @using FitnessFox.Components.Data.Options
 @using FitnessFox.Components.Data.Settings
 @using FitnessFox.Components.Services
+@using FitnessFox.Components.ViewModels
 @using Microsoft.Extensions.Options
 @inject IGoogleSyncService googleSyncService
 @inject ISettingsService settingsService
@@ -10,14 +11,15 @@
 @inject IDialogService dialogService
 @inject ApplicationDbContext applicationDbContext
 @inject NavigationManager nav
+@inherits ViewModelComponentBase<SettingsViewModel>
 <h3>Settings</h3>
 
 <MudText>To sync your local data to Google sheets, add the sheet id (in the url) and share the sheet with this email: @googleOptions.Value.UserEmail</MudText>
-<MudButton Disabled="IsLoading" OnClick="Sync">Sync to Google</MudButton>
-<MudButton Disabled="IsLoading" OnClick="ClearDb">Clear Database</MudButton>
+<MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.Sync)">Sync to Google</MudButton>
+<MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.ClearDb)">Clear Database</MudButton>
 
 <MudGrid>
-    @foreach (var key in Keys.Where(k => k.GetAttribute<DisplayAttribute>() != null))
+    @foreach (var key in Vm.Keys.Where(k => k.GetAttribute<DisplayAttribute>() != null))
     {
         <MudItem xs="12" sm="6" md="4">
             <MudPaper Elevation="2" Style="padding: 10px">
@@ -29,31 +31,30 @@
                 @if (name?.ResourceType == typeof(string))
                 {
                     <MudTextField T="string"
-                                  Disabled="IsLoading"
+                                  Disabled="Vm.IsLoading"
                                   Label="@name?.Name"
-                                  ValueChanged="a => SetValue(key, a)"
-                                  Value="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()].GetValue<string>() : "")">
+                                  ValueChanged="a => Vm.Load(() => Vm.SetValue(key, a))"
+                                  Value="@(Vm.KeyValues.ContainsKey(key.ToString()) ? Vm.KeyValues[key.ToString()].GetValue<string>() : "")">
 
                     </MudTextField>
                 }
                 else if (name?.ResourceType == typeof(bool))
                 {
                     <MudCheckBox T="bool"
-                                 Disabled="IsLoading"
+                                 Disabled="Vm.IsLoading"
                                  Label="@name?.Name"
-                                 ValueChanged="a => SetValue(key, a)"
-                                 Value="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()].GetValue<bool>() : false)">
+                                 ValueChanged="a => Vm.Load(() => Vm.SetValue(key, a))"
+                                 Value="@(Vm.KeyValues.ContainsKey(key.ToString()) ? Vm.KeyValues[key.ToString()].GetValue<bool>() : false)">
                                  
                     </MudCheckBox>
                 }
                 else if (name?.ResourceType == typeof(DateTime))
                 {
                     <MudDatePicker
-                        Disabled="IsLoading"
+                        Disabled="Vm.IsLoading"
                         Label="@name?.Name"
-                        Date="@(KeyValues.ContainsKey(key.ToString()) ? KeyValues[key.ToString()].GetValue<DateTime>() : DateTime.MinValue)"
-                        DateChanged="a => SetValue(key, a)">
-                        
+                        Date="@(Vm.KeyValues.ContainsKey(key.ToString()) ? Vm.KeyValues[key.ToString()].GetValue<DateTime>() : DateTime.MinValue)"
+                        DateChanged="a => Vm.Load(() => Vm.SetValue(key, a))">
                     </MudDatePicker>
                 }
 
@@ -62,59 +63,3 @@
         </MudItem>
     }
 </MudGrid>
-
-@code {
-    public List<SettingKey> Keys { get; set; } = Enum.GetValues<SettingKey>().ToList();
-    public Dictionary<string, UserSetting> KeyValues { get; set; } = new();
-    public bool IsLoading { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await Refresh();
-    }
-
-    public async Task Refresh()
-    {
-        KeyValues = await settingsService.GetKeys();
-    }
-
-    public async Task SetValue<T>(SettingKey key, T value)
-    {
-        await settingsService.SetValue(key, value);
-        await Refresh();
-    }
-
-    public async Task Sync()
-    {
-        try
-        {
-            IsLoading = true;
-            StateHasChanged();
-            await googleSyncService.Sync();
-            Snackbar.Add("Synced!");
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(ex.Message, Severity.Error);
-        }
-        finally
-        {
-            await Refresh();
-            StateHasChanged();
-            IsLoading = false;
-        }
-    }
-    private async Task ClearDb()
-    {
-        var result = await dialogService.ShowMessageBox("Confirm", "Are you sure you want to delete ALL local data?", "Yes", "No");
-        if (result == true)
-        {
-            applicationDbContext.Database.EnsureDeleted();
-            applicationDbContext.Database.EnsureCreated();
-            nav.NavigateTo(nav.Uri, true);
-
-            // await Refresh();
-            // StateHasChanged();
-        }
-    }
-}

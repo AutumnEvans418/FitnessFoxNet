@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using FitnessFox.Components.Services
+@using FitnessFox.Components.ViewModels
 @using FitnessFox.Data.Goals
 @using FitnessFox.Data.Vitals
 
@@ -9,15 +10,16 @@
 @inject IAuthenticationService authenticationService
 @inject ISettingsService settingsService
 @inject IGoogleSyncService googleSyncService
+@inherits ViewModelComponentBase<HomeViewModel>
 <PageTitle>Home</PageTitle>
 <MudGrid>
     <MudItem xs="12" sm="12" md="12">
         <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
             <MudText Typo="Typo.h6">Current Date</MudText>
             <MudStack Row=true>
-                <MudIconButton OnClick="() => SetDate(CurrentDate?.AddDays(-1))" Icon="@Icons.Material.Filled.ArrowLeft"></MudIconButton>
-                <MudDatePicker @bind-Date="CurrentDate" @bind-Date:after="Refresh"></MudDatePicker>
-                <MudIconButton OnClick="() => SetDate(CurrentDate?.AddDays(1))" Icon="@Icons.Material.Filled.ArrowRight"></MudIconButton>
+                <MudIconButton Disabled=Vm.IsLoading OnClick="() => Vm.Load(() => Vm.SetDate(Vm.CurrentDate?.AddDays(-1)))" Icon="@Icons.Material.Filled.ArrowLeft"></MudIconButton>
+                <MudDatePicker Disabled=Vm.IsLoading @bind-Date="Vm.CurrentDate" @bind-Date:after="() => Vm.Load(Vm.Refresh)"></MudDatePicker>
+                <MudIconButton Disabled=Vm.IsLoading OnClick="() => Vm.Load(() => Vm.SetDate(Vm.CurrentDate?.AddDays(1)))" Icon="@Icons.Material.Filled.ArrowRight"></MudIconButton>
             </MudStack>
         </MudPaper>
     </MudItem>
@@ -25,14 +27,16 @@
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Weight</MudText>
             <MudStack Row=true>
-                <MudNumericField T="float" @bind-Value="Weight.Value" @bind-Value:after="() => Save(Weight)" Label="Weight"></MudNumericField>
-                @if (User.HeightInches > 0)
+                <MudNumericField Disabled=Vm.IsLoading T="float" 
+                    @bind-Value="Vm.Weight.Value" 
+                    @bind-Value:after="() => Vm.Load(() => Vm.Save(Vm.Weight))" Label="Weight"></MudNumericField>
+                @if (Vm.User.HeightInches > 0)
                 {
-                    <MudText Align="Align.Center">BMI @FitnessExtensions.Bmi(Weight.Value, User.HeightInches)</MudText>
+                    <MudText Align="Align.Center">BMI @FitnessExtensions.Bmi(Vm.Weight.Value, Vm.User.HeightInches)</MudText>
                 }
-                @if (WeightGoal != null)
+                @if (Vm.WeightGoal != null)
                 {
-                    <MudText Align="Align.Center">Goal Weight: @WeightGoal.Value (@MathF.Round(Weight.Value - WeightGoal.Value)lbs to go)</MudText>
+                    <MudText Align="Align.Center">Goal Weight: @Vm.WeightGoal.Value (@MathF.Round(Vm.Weight.Value - Vm.WeightGoal.Value)lbs to go)</MudText>
                 }
 
             </MudStack>
@@ -42,124 +46,28 @@
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Blood</MudText>
             <MudStack Row=true>
-                <MudNumericField T="float" @bind-Value="Systolic.Value" @bind-Value:after="() => Save(Systolic)" Label="Systolic"></MudNumericField>
-                <MudNumericField T="float" @bind-Value="Diastolic.Value" @bind-Value:after="() => Save(Diastolic)" Label="Diastolic"></MudNumericField>
-                <MudNumericField T="float" @bind-Value="Bpm.Value" @bind-Value:after="() => Save(Bpm)" Label="Bpm"></MudNumericField>
+                <MudNumericField Disabled=Vm.IsLoading T="float" @bind-Value="Vm.Systolic.Value"  @bind-Value:after="() => Vm.Load(() => Vm.Save(Vm.Systolic))" Label="Systolic"></MudNumericField>
+                <MudNumericField Disabled=Vm.IsLoading T="float" @bind-Value="Vm.Diastolic.Value" @bind-Value:after="() => Vm.Load(() => Vm.Save(Vm.Diastolic))" Label="Diastolic"></MudNumericField>
+                <MudNumericField Disabled=Vm.IsLoading T="float" @bind-Value="Vm.Bpm.Value"       @bind-Value:after="() => Vm.Load(() => Vm.Save(Vm.Bpm))" Label="Bpm"></MudNumericField>
             </MudStack>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Temperature</MudText>
-            <MudNumericField T="float" @bind-Value="Temperature.Value" @bind-Value:after="() => Save(Temperature)" Label="Temp"></MudNumericField>
+            <MudNumericField Disabled=Vm.IsLoading T="float" @bind-Value="Vm.Temperature.Value" @bind-Value:after="() => Vm.Load(() => Vm.Save(Vm.Temperature))" Label="Temp"></MudNumericField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Water</MudText>
-            <MudNumericField T="float" @bind-Value="Water.Value" @bind-Value:after="() => Save(Water)" Label="Water (fl ounces)"></MudNumericField>
+            <MudNumericField Disabled=Vm.IsLoading T="float" @bind-Value="Vm.Water.Value" @bind-Value:after="() => Vm.Load(() => Vm.Save(Vm.Water))" Label="Water (fl ounces)"></MudNumericField>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6" md="4">
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Height</MudText>
-            <MudNumericField T="float" @bind-Value="User.HeightInches" @bind-Value:after="() => dbContext.SaveChangesAsync()" Label="Height Inches"></MudNumericField>
+            <MudNumericField Disabled=Vm.IsLoading T="float" @bind-Value="Vm.User.HeightInches" @bind-Value:after="() => Vm.Load(() => dbContext.SaveChangesAsync())" Label="Height Inches"></MudNumericField>
         </MudPaper>
     </MudItem>
 </MudGrid>
-
-@code {
-    public DateTime? CurrentDate { get; set; } = DateTime.Now;
-
-    public List<UserVital> Vitals { get; set; } = new();
-
-    public UserVital Weight { get; set; } = new();
-    public UserVital Systolic { get; set; } = new();
-    public UserVital Diastolic { get; set; } = new();
-    public UserVital Bpm { get; set; } = new();
-    public UserVital Temperature { get; set; } = new();
-    public UserVital Water { get; set; } = new();
-
-    public ApplicationUser User { get; set; } = new();
-
-    public UserGoal? WeightGoal { get; set; }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender)
-            return;
-
-        var shouldSync = await settingsService.GetValue<bool?>(Data.Settings.SettingKey.SyncOnStart);
-        var lastDate = await settingsService.GetValue<DateTime?>(Data.Settings.SettingKey.SyncLastDate);
-
-        if (shouldSync == true && (lastDate == null || lastDate < DateTime.Now.AddHours(-1)) )
-        {
-            await googleSyncService.Sync();
-
-            await settingsService.SetValue<DateTime?>(Data.Settings.SettingKey.SyncLastDate, DateTime.Now);
-
-            Snackbar.Add("Synced!");
-        }
-
-        await Refresh();
-
-        await base.OnAfterRenderAsync(firstRender);
-    }
-
-    public async Task Refresh()
-    {
-        var user = await authenticationService.GetUserAsync();
-
-        if (user == null)
-            return;
-
-        User = user;
-
-        var currentDate = CurrentDate.GetValueOrDefault().Date;
-
-        Vitals = await dbContext.UserVitals
-            .Where(u => u.User.Id == user.Id)
-            .Where(u => u.Date.Date == currentDate)
-            .ToListAsync();
-
-        var goals = await dbContext.UserGoals.Where(u => u.UserId == user.Id).ToListAsync();
-
-        WeightGoal = goals.FirstOrDefault(g => g.Type == UserGoalType.WeightLbs);
-
-        UserVital getType(UserVitalType type)
-        {
-            return Vitals.FirstOrDefault(v => v.Type == type) ?? new()
-            {
-                UserId = user.Id,
-                Type = type,
-                Date = currentDate,
-            };
-        }
-
-        Weight = getType(UserVitalType.Weight);
-        Systolic = getType(UserVitalType.Systolic);
-        Diastolic = getType(UserVitalType.Diastolic);
-        Bpm = getType(UserVitalType.Bpm);
-        Temperature = getType(UserVitalType.Temperature);
-        Water = getType(UserVitalType.Water);
-
-        StateHasChanged();
-    }
-
-    public async Task SetDate(DateTime? date)
-    {
-        CurrentDate = date;
-        await Refresh();
-    }
-
-    public async Task Save(params UserVital[] vitals)
-    {
-        foreach (var item in vitals)
-        {
-            dbContext.Update(item);
-        }
-        await dbContext.SaveChangesAsync();
-        StateHasChanged();
-    }
-
-}

@@ -1,0 +1,29 @@
+﻿@page "/reports"
+@using FitnessFox.Components.ViewModels
+@inherits ViewModelComponentBase<ReportsViewModel>
+<h3>Reports</h3>
+
+<MudGrid>
+    <MudItem xs="12" sm="4">
+        <MudDatePicker @bind-Date="Vm.From" @bind-Date:after="() => Vm.Load(Vm.Refresh)" Label="From"></MudDatePicker>
+    </MudItem>
+    <MudItem xs="12" sm="4">
+        <MudDatePicker @bind-Date="Vm.To" @bind-Date:after="() => Vm.Load(Vm.Refresh)" Label="To"></MudDatePicker>
+    </MudItem>
+</MudGrid>
+
+<MudChart  LegendPosition="Position.Top" Width="100%" Height="400px" ChartType="ChartType.Line" ChartSeries="Vm.Series" XAxisLabels="Vm.Labels" AxisChartOptions="_axisChartOptions">
+
+</MudChart>
+@code {
+    private AxisChartOptions _axisChartOptions = new AxisChartOptions()
+    {
+        XAxisLabelRotation = 15,
+        MatchBoundsToSize = true, 
+    };
+
+    private ChartOptions chartOptions = new()
+    {
+        
+    };
+}

@@ -1,84 +1,21 @@
 ﻿@page "/goals"
+@using FitnessFox.Components.ViewModels
 @using FitnessFox.Data.Goals
 
 @attribute [Authorize]
-@inject ApplicationDbContext dbContext
-@inject ISnackbar Snackbar
-@inject IAuthenticationService authenticationService
+@inherits ViewModelComponentBase<GoalsViewModel>
 <h3>Goals</h3>
 
 <MudGrid>
-    @foreach (var goal in UserGoals)
+    @foreach (var goal in Vm.UserGoals)
     {
         <MudItem xs="12" sm="6" md="4">
             <MudPaper Elevation="2" Style="padding: 10px">
                 @{
                     var name = goal.Type.GetAttribute<DisplayAttribute>();
                 }
-                <MudNumericField T="float" @bind-Value="goal.Value" @bind-Value:after="() => Save(goal)" Label="@name?.Name"></MudNumericField>
+                <MudNumericField T="float" @bind-Value="goal.Value" @bind-Value:after="() => Vm.Load(() => Vm.Save(goal))" Label="@name?.Name"></MudNumericField>
             </MudPaper>
         </MudItem>
     }
 </MudGrid>
-
-
-@code {
-    public List<UserGoalType> GoalTypes { get; set; } = Enum.GetValues<UserGoalType>().ToList();
-
-    public List<UserGoal> UserGoals { get; set; } = new();
-    public ApplicationUser User { get; set; } = new();
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender)
-            return;
-
-        await Refresh();
-    }
-
-    public async Task Refresh()
-    {
-        UserGoals.Clear();
-
-        var user = await authenticationService.GetUserAsync();
-        if (user == null)
-            return;
-
-        User = user;
-
-        var goals = await dbContext.UserGoals.Where(u => u.UserId == user.Id).ToListAsync();
-
-        foreach (var type in GoalTypes)
-        {
-            var goal = goals.FirstOrDefault(u => u.Type == type) ?? new()
-            {
-                Type = type,
-                UserId = user.Id,
-            };
-            UserGoals.Add(goal);
-        }
-
-        StateHasChanged();
-    }
-
-    public async Task Save(UserGoal goal)
-    {
-        if (goal.Type == UserGoalType.WeightLbs && User.HeightInches >= 0)
-        {
-            var bmi = UserGoals.First(b => b.Type == UserGoalType.Bmi);
-            bmi.Value = FitnessExtensions.Bmi(goal.Value, User.HeightInches);
-            dbContext.Update(bmi);
-        }
-        else if (goal.Type == UserGoalType.Bmi && User.HeightInches >= 0)
-        {
-            var weight = UserGoals.First(b => b.Type == UserGoalType.WeightLbs);
-            weight.Value = FitnessExtensions.BmiWeight(goal.Value, User.HeightInches);
-            dbContext.Update(weight);
-        }
-
-        dbContext.Update(goal);
-        await dbContext.SaveChangesAsync();
-        Snackbar.Add("Saved!");
-        await Refresh();
-    }
-}

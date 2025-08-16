@@ -1,19 +1,21 @@
 ﻿@page "/recipes"
+@using FitnessFox.Components.ViewModels
 @using FitnessFox.Data.Foods
 @attribute [Authorize]
 @inject ApplicationDbContext dbContext
 @inject AuthenticationStateProvider stateProvider
 @inject ISnackbar Snackbar
+@inherits ViewModelComponentBase<RecipesViewModel>
 @inject NavigationManager navigationManager
-<MudDataGrid @ref="dataGrid" RowClick="@(r => navigationManager.NavigateTo($"/recipes/{r.Item.Id}"))" T="Recipe" ServerData="ServerReload" Filterable="false">
+<MudDataGrid @ref="dataGrid" RowClick="@(r => navigationManager.NavigateTo($"/recipes/{r.Item.Id}"))" T="Recipe" ServerData="Vm.ServerReload" Filterable="false">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Recipes</MudText>
-        <MudButton Color="Color.Primary"
+        <MudButton Disabled=Vm.IsLoading Color="Color.Primary"
                    Variant="Variant.Filled"
                    Size="Size.Small"
                    Style="margin:5px" Href="/recipes/add">+</MudButton>
         <MudSpacer />
-        <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+        <MudTextField T="string" ValueChanged="@(s => Vm.OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
     </ToolBarContent>
     <Columns>
@@ -29,69 +31,12 @@
     </PagerContent>
 </MudDataGrid>
 @code {
-    MudDataGrid<Recipe>? dataGrid;
-    string? searchString = null;
+    private MudDataGrid<Recipe>? dataGrid;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnAfterRender(bool firstRender)
     {
-        if (!firstRender)
-            return;
-
-        var user = await stateProvider.GetAuthenticationStateAsync();
-
-        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null)
-            return;
-
-
-
-        await base.OnAfterRenderAsync(firstRender);
-    }
-    private async Task<GridData<Recipe>> ServerReload(GridState<Recipe> state)
-    {
-        var dataQuery = dbContext.Recipes.AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(searchString))
-        {
-            dataQuery = dataQuery.Where(p => p.Name.Contains(searchString));
-        }
-
-        var totalItems = await dataQuery.CountAsync();
-
-        var sortDefinition = state.SortDefinitions.FirstOrDefault();
-        if (sortDefinition != null)
-        {
-            switch (sortDefinition.SortBy)
-            {
-                case nameof(Recipe.Name):
-                    dataQuery = dataQuery.OrderByDirection(
-                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                        o => o.Name
-                    );
-                    break;
-                case nameof(Recipe.NumberOfPeople):
-                    dataQuery = dataQuery.OrderByDirection(
-                        sortDefinition.Descending ? SortDirection.Descending : SortDirection.Ascending,
-                        o => o.NumberOfPeople
-                    );
-                    break;
-            }
-        }
-
-        var pagedData = await dataQuery.Skip(state.Page * state.PageSize).Take(state.PageSize).ToListAsync();
-        return new GridData<Recipe>
-        {
-            TotalItems = totalItems,
-            Items = pagedData
-        };
-    }
-
-    private async Task OnSearch(string text)
-    {
-        if (dataGrid == null)
-            return;
-        searchString = text;
-        await dataGrid.ReloadServerData();
+        if (dataGrid != null)
+            Vm.ReloadServerData = dataGrid.ReloadServerData;
+        base.OnAfterRender(firstRender);
     }
 }

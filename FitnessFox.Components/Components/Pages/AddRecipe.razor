@@ -1,23 +1,21 @@
 ﻿@page "/recipes/add"
 @page "/recipes/{id:int}"
+@using FitnessFox.Components.ViewModels.Foods
 @using FitnessFox.Data.Foods
 @attribute [Authorize]
-@inject ApplicationDbContext dbContext
-@inject AuthenticationStateProvider stateProvider
-@inject ISnackbar Snackbar
-@inject NavigationManager navigationManager
-@inject IJSRuntime jsRuntime
-<EditForm Model="Model" OnSubmit="Submit" FormName="Recipe1">
+@inherits ViewModelComponentBase<AddRecipeViewModel>
+
+<EditForm Model="Model" OnSubmit="m => Vm.Load(Vm.Submit)" FormName="Recipe1">
     <DataAnnotationsValidator />
 
     <MudPaper Class="p-2 mb-2 mt-2">
         <MudTextField Class="mb-2" T="string" @bind-Value="Model!.Name" Label="Name" Required=true></MudTextField>
-        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.NumberOfPeople" @bind-Value:after="IngredientUpdated" Label="Number of People" Required=true></MudNumericField>
+        <MudNumericField Class="mb-2" T="float" @bind-Value="Model!.NumberOfPeople" @bind-Value:after="Vm.IngredientUpdated" Label="Number of People" Required=true></MudNumericField>
     </MudPaper>
 
     <MudPaper Class="p-2 mb-2">
 
-        <MudTable Items="Model!.Foods" Context="food" CanCancelEdit=true RowEditCommit="i => IngredientUpdated()">
+        <MudTable Items="Model!.Foods" Context="food" CanCancelEdit=true RowEditCommit="i => Vm.IngredientUpdated()">
             <ToolBarContent>
                 <MudText>Ingredients</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="() => Model!.Foods.Add(new())"></MudIconButton>
@@ -36,7 +34,7 @@
                 <MudTd>
                     <MudAutocomplete T="Food"
                                      @bind-Value="@food.Food"
-                                     SearchFunc="Search"
+                                     SearchFunc="Vm.Search"
                                      Variant="Variant.Outlined"
                                      Label="Meal"
                                      Clearable></MudAutocomplete>
@@ -81,64 +79,14 @@
 
 @code {
     [SupplyParameterFromForm]
-    public Recipe? Model { get; set; }
+    public Recipe? Model { get => Vm.Model; set => Vm.Model = value; }
 
     [Parameter]
     public int? Id { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        if (Id != null)
-        {
-            Model = await dbContext
-                .Recipes
-                .Include(r => r.Foods)
-                .ThenInclude(r => r.Food)
-                .FirstAsync(f => f.Id == Id);
-        }
-        Model ??= new();
-    }
-
-    public async Task Submit()
-    {
-        if (Model == null)
-            return;
-
-        var user = await stateProvider.GetAuthenticationStateAsync();
-
-        var userId = user.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null)
-            return;
-
-        Model.UserId = userId;
-
-        Model.SetNutrients();
-
-        dbContext.Recipes.Update(Model);
-        await dbContext.SaveChangesAsync();
-        await jsRuntime.InvokeVoidAsync("history.back");
-    }
-
-    private async Task<IEnumerable<Food>> Search(string value, CancellationToken token)
-    {
-        var foods = dbContext.Foods.OrderBy(f => f.BrandRestaurant).AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            foods = foods.Where(f => f.BrandRestaurant.Contains(value) || f.Description.Contains(value));
-        }
-
-        var foodsList = await foods.Take(20).ToListAsync();
-
-        return foodsList
-            .OrderBy(n => n.Name)
-            .ToList();
-    }
-
-    public void IngredientUpdated()
-    {
-        Model?.SetNutrients();
-        StateHasChanged();
+        Vm.Id = Id;
+        base.OnInitialized();
     }
 }

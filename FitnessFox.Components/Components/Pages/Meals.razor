@@ -1,4 +1,5 @@
 ﻿@page "/meals"
+@using FitnessFox.Components.ViewModels
 @using FitnessFox.Data.Foods
 @using FitnessFox.Data.Goals
 
@@ -6,14 +7,15 @@
 @inject ApplicationDbContext dbContext
 @inject IAuthenticationService authenticationService
 @inject ISnackbar Snackbar
+@inherits ViewModelComponentBase<MealsViewModel>
 <MudGrid>
     <MudItem xs="12" sm="12" md="12">
         <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
             <MudText Typo="Typo.h6">Current Date</MudText>
             <MudStack Row=true>
-                <MudIconButton OnClick="() => SetDate(CurrentDate?.AddDays(-1))" Icon="@Icons.Material.Filled.ArrowLeft"></MudIconButton>
-                <MudDatePicker @bind-Date="CurrentDate" @bind-Date:after="Refresh"></MudDatePicker>
-                <MudIconButton OnClick="() => SetDate(CurrentDate?.AddDays(1))" Icon="@Icons.Material.Filled.ArrowRight"></MudIconButton>
+                <MudIconButton Disabled=Vm.IsLoading OnClick="() => Vm.Load(() => Vm.SetDate(Vm.CurrentDate?.AddDays(-1)))" Icon="@Icons.Material.Filled.ArrowLeft"></MudIconButton>
+                <MudDatePicker Disabled=Vm.IsLoading @bind-Date="Vm.CurrentDate" @bind-Date:after="() => Vm.Load(Vm.Refresh)"></MudDatePicker>
+                <MudIconButton Disabled=Vm.IsLoading OnClick="() => Vm.Load(() => Vm.SetDate(Vm.CurrentDate?.AddDays(1)))" Icon="@Icons.Material.Filled.ArrowRight"></MudIconButton>
             </MudStack>
         </MudPaper>
     </MudItem>
@@ -21,14 +23,14 @@
     <MudItem xs="12" sm="6" md="4">
         <MudPaper Elevation="2" Class="pa-4">
             @{
-                var goal = Goals.FirstOrDefault(g => g.Type == UserGoalType.Calories);
+                var goal = Vm.Goals.FirstOrDefault(g => g.Type == UserGoalType.Calories);
             }
 
-            <MudProgressCircular Style="height: 100px; width: 100px" Color="Color.Primary" Value="@UserMeals.Sum(s => s.Calories)" Max="goal?.Value ?? 2000">
+            <MudProgressCircular Style="height: 100px; width: 100px" Color="Color.Primary" Value="@Vm.UserMeals.Sum(s => s.Calories)" Max="goal?.Value ?? 2000">
                 <ChildContent>
                     <MudStack Spacing="0" AlignItems="AlignItems.Center" Justify="Justify.Center">
                         <MudText Typo="Typo.subtitle2">Calories</MudText>
-                        <MudText Typo="Typo.subtitle2">@UserMeals.Sum(s => s.Calories)/@(@goal?.Value ?? 2000)</MudText>
+                        <MudText Typo="Typo.subtitle2">@Vm.UserMeals.Sum(s => s.Calories)/@(@goal?.Value ?? 2000)</MudText>
                     </MudStack>
                 </ChildContent>
             </MudProgressCircular>
@@ -40,14 +42,14 @@
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h4">Meals</MudText>
             <MudButtonGroup  Variant="Variant.Filled" >
-                <MudIconButton title="Breakfast" Icon="@Icons.Material.Filled.EggAlt" OnClick="() => Add(UserMealType.Breakfast)"></MudIconButton>
-                <MudIconButton title="Lunch" Icon="@Icons.Material.Filled.LunchDining" OnClick="() => Add(UserMealType.Lunch)"></MudIconButton>
-                <MudIconButton title="Dinner" Icon="@Icons.Material.Filled.OutdoorGrill" OnClick="() => Add(UserMealType.Dinner)"></MudIconButton>
-                <MudIconButton title="Snack" Icon="@Icons.Material.Filled.LocalDrink" OnClick="() => Add(UserMealType.Snacks)"></MudIconButton>
+                <MudIconButton Disabled=Vm.IsLoading title="Breakfast" Icon="@Icons.Material.Filled.EggAlt" OnClick="() =>    Vm.Add(UserMealType.Breakfast)"></MudIconButton>
+                <MudIconButton Disabled=Vm.IsLoading title="Lunch" Icon="@Icons.Material.Filled.LunchDining" OnClick="() =>   Vm.Add(UserMealType.Lunch)"></MudIconButton>
+                <MudIconButton Disabled=Vm.IsLoading title="Dinner" Icon="@Icons.Material.Filled.OutdoorGrill" OnClick="() => Vm.Add(UserMealType.Dinner)"></MudIconButton>
+                <MudIconButton Disabled=Vm.IsLoading title="Snack" Icon="@Icons.Material.Filled.LocalDrink" OnClick="() =>    Vm.Add(UserMealType.Snacks)"></MudIconButton>
 
-                <MudIconButton title="Add Food" Color="Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Add" Href="/foods/add"></MudIconButton>
+                <MudIconButton Disabled=Vm.IsLoading title="Add Food" Color="Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Add" Href="/foods/add"></MudIconButton>
             </MudButtonGroup>
-            <MudTable Items="UserMeals" RowEditCommit="async i => await Update(i as UserMeal)" CanCancelEdit=true>
+            <MudTable Items="Vm.UserMeals" RowEditCommit="async i => await Vm.Load(() => Vm.Update(i as UserMeal))" CanCancelEdit=true>
             
                 <HeaderContent>
                     <MudTh>Type</MudTh>
@@ -73,7 +75,7 @@
                     <MudTd>
                         <MudAutocomplete T="Nutrients"
                                          @bind-Value="@context.MealItem"
-                                         SearchFunc="Search"
+                                         SearchFunc="Vm.Search"
                                          Variant="Variant.Outlined"
                                          Label="Meal"
                                          Clearable></MudAutocomplete>
@@ -90,93 +92,3 @@
         </MudPaper>
     </MudItem>
 </MudGrid>
-@code {
-    public DateTime? CurrentDate { get; set; } = DateTime.Now;
-    public ApplicationUser User { get; set; } = new();
-    public List<UserMeal> UserMeals { get; set; } = new();
-    public List<UserGoal> Goals { get; set; } = [];
-
-    protected override async Task OnInitializedAsync()
-    {
-        await Refresh();
-    }
-
-    public async Task Refresh()
-    {
-
-        var user = await authenticationService.GetUserAsync();
-
-        if (user == null)
-            return;
-
-        User = user;
-
-        var currentDate = CurrentDate.GetValueOrDefault().Date;
-
-        Goals = await dbContext.UserGoals.Where(u => u.UserId == user.Id).ToListAsync();
-
-        UserMeals = await dbContext
-            .UserMeals
-            .Where(u => u.UserId == user.Id && u.Date.Date == currentDate)
-            .Include(u => u.Food)
-            .Include(u => u.Recipe)
-            .OrderBy(p => p.Type)
-            .ToListAsync();
-
-        StateHasChanged();
-    }
-
-    public async Task SetDate(DateTime? date)
-    {
-        CurrentDate = date;
-        await Refresh();
-    }
-
-    public void Add(UserMealType type)
-    {
-        var meal = new UserMeal
-        {
-            Date = CurrentDate.GetValueOrDefault(),
-            UserId = User.Id,
-            Type = type,
-        };
-        UserMeals.Add(meal);
-        StateHasChanged();
-    }
-    private async Task<IEnumerable<Nutrients>> Search(string value, CancellationToken token)
-    {
-        var foods = dbContext.Foods.OrderBy(f => f.BrandRestaurant).AsQueryable();
-        var recipes = dbContext.Recipes.OrderBy(f => f.Name).AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(value))
-        {
-            foods = foods.Where(f => f.BrandRestaurant.Contains(value) || f.Description.Contains(value));
-            recipes = recipes.Where(f => f.Name.Contains(value));
-        }
-
-        var foodsList = await foods.Take(20).ToListAsync();
-        var recipesList = await recipes.Take(20).ToListAsync();
-
-        return foodsList
-            .Cast<Nutrients>()
-            .Union(recipesList)
-            .OrderBy(n =>
-            {
-                if (n is Food f)
-                    return f.Name;
-                if (n is Recipe r)
-                    return r.Name;
-                throw new NotImplementedException();
-            }).ToList();
-    }
-
-    public async Task Update(UserMeal meal)
-    {
-        meal.SetNutrients();
-
-        dbContext.Update(meal);
-        await dbContext.SaveChangesAsync();
-
-        StateHasChanged();
-    }
-}
