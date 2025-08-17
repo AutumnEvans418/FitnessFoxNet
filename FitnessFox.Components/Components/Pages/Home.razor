@@ -34,7 +34,7 @@
                 {
                     <MudText Align="Align.Center">BMI @FitnessExtensions.Bmi(Vm.Weight.Value, Vm.User.HeightInches)</MudText>
                 }
-                @if (Vm.WeightGoal != null)
+                @if (Vm.WeightGoal != null && MathF.Round(Vm.Weight.Value - Vm.WeightGoal.Value) > 0)
                 {
                     <MudText Align="Align.Center">Goal Weight: @Vm.WeightGoal.Value (@MathF.Round(Vm.Weight.Value - Vm.WeightGoal.Value)lbs to go)</MudText>
                 }
