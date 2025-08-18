@@ -32,7 +32,10 @@ namespace FitnessFox.Components.ViewModels
 
         public DateTime? From { get; set; } = DateTime.Now.Date.AddDays(-6);
         public DateTime? To { get; set; } = DateTime.Now.Date;
-        public List<ChartSeries> Series { get; set; } = [];
+        public List<ChartSeries> WeightSeries { get; set; } = [];
+
+        public List<ChartSeries> HeartSeries { get; set; } = [];
+
         public string[] Labels { get; set; } = [];
 
         public override async Task OnInitializedAsync()
@@ -53,24 +56,57 @@ namespace FitnessFox.Components.ViewModels
                 return;
             }
 
+            WeightSeries = [];
+            HeartSeries = [];
+            Labels = new string[WeightSeries.Count];
+
             var vitals = await dbContext
                 .UserVitals
                 .Where(u => u.UserId == user.Id && u.Date >= From && u.Date <= To)
                 .ToListAsync();
 
-            var days = (int)((To - From)?.TotalDays ?? 0) + 1;
+            var series = CreateSeries(vitals, From, To, [UserVitalType.Weight]);
+
+            WeightSeries = series.series;
+            Labels = series.labels;
+
+            var series2 = CreateSeries(vitals, From, To, [UserVitalType.Systolic, UserVitalType.Diastolic, UserVitalType.Bpm]);
+
+            HeartSeries = series2.series;
+
+            var goal = await dbContext
+                .UserGoals
+                .Where(u => u.UserId == user.Id && u.Type == FitnessFox.Data.Goals.UserGoalType.WeightLbs)
+                .FirstOrDefaultAsync();
+
+            if (goal != null)
+            {
+                var name = goal.Type.GetAttribute<DisplayAttribute>()?.Name ?? goal.Type.ToString();
+                WeightSeries.Add(new ChartSeries
+                {
+                    Name = name,
+                    Data = Enumerable.Range(0, Labels.Length).Select(d => (double)goal.Value).ToArray()
+                });
+            }
+        }
+
+        private static (List<ChartSeries> series, string[] labels) CreateSeries(
+            List<UserVital> vitals, 
+            DateTime? from,
+            DateTime? to,
+            UserVitalType[] vitalsToDisplay)
+        {
+            var days = (int)((to - from)?.TotalDays ?? 0) + 1;
 
             var binSize = Math.Max(1, days / 7);
 
-            var vitalsToDisplay = new[] { UserVitalType.Weight };
-
-            Labels = new string[days / binSize];
-            Series = [];
+            var labels = new string[days / binSize];
+            List<ChartSeries> chartSeries = [];
 
             foreach (var vitalType in vitalsToDisplay)
             {
                 var series = new ChartSeries();
-                Series.Add(series);
+                chartSeries.Add(series);
                 var data = new double[days / binSize];
 
                 series.Data = data;
@@ -82,7 +118,7 @@ namespace FitnessFox.Components.ViewModels
 
                 for (int i = 0; i < days; i++)
                 {
-                    var date = From.GetValueOrDefault().AddDays(i);
+                    var date = from.GetValueOrDefault().AddDays(i);
                     var userVital = vitals.FirstOrDefault(v => v.Type == vitalType && v.Date.Date == date.Date);
 
                     if (userVital != null)
@@ -90,9 +126,9 @@ namespace FitnessFox.Components.ViewModels
                         value += userVital.Value;
                     }
 
-                    if ((i+1) % binSize == 0)
+                    if ((i + 1) % binSize == 0)
                     {
-                        Labels[bin] = date.ToString("MMM d");
+                        labels[bin] = date.ToString("MMM d");
                         data[bin] = value / binSize;
                         value = 0f;
                         bin++;
@@ -100,20 +136,7 @@ namespace FitnessFox.Components.ViewModels
                 }
             }
 
-            var goal = await dbContext
-                .UserGoals
-                .Where(u => u.UserId == user.Id && u.Type == FitnessFox.Data.Goals.UserGoalType.WeightLbs)
-                .FirstOrDefaultAsync();
-
-            if (goal != null)
-            {
-                var name = goal.Type.GetAttribute<DisplayAttribute>()?.Name ?? goal.Type.ToString();
-                Series.Add(new ChartSeries
-                {
-                    Name = name,
-                    Data = Enumerable.Range(0, days / binSize).Select(d => (double)goal.Value).ToArray()
-                });
-            }
+            return (chartSeries, labels);
         }
     }
 }

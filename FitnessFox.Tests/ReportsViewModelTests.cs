@@ -19,8 +19,8 @@ namespace FitnessFox.Tests
         {
             await Subject.Refresh();
 
-            Subject.Series.Count.Should().Be(1);
-            Subject.Series[0].Data.Should().HaveCount(7);
+            Subject.WeightSeries.Count.Should().Be(1);
+            Subject.WeightSeries[0].Data.Should().HaveCount(7);
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace FitnessFox.Tests
 
             await Subject.Refresh();
 
-            Subject.Series[0].Data.Should().HaveCount(7);
+            Subject.WeightSeries[0].Data.Should().HaveCount(7);
         }
 
         [Fact]
@@ -53,7 +53,7 @@ namespace FitnessFox.Tests
             await Subject.Refresh();
 
             Subject.Labels.Should().HaveCount(7);
-            Subject.Series[0].Data.Should().HaveCount(7);
+            Subject.WeightSeries[0].Data.Should().HaveCount(7);
 
             Subject.Labels.First().Should().Be("Jan 1");
             Subject.Labels.Last().Should().Be("Jan 7");
@@ -83,7 +83,7 @@ namespace FitnessFox.Tests
 
             await Subject.Refresh();
 
-            Subject.Series.First().Data.Average().Should().Be(1);
+            Subject.WeightSeries.First().Data.Average().Should().Be(1);
         }
 
         [Fact]
@@ -120,7 +120,7 @@ namespace FitnessFox.Tests
 
             await Subject.Refresh();
 
-            Subject.Series.First().Data.Average().Should().Be(5);
+            Subject.WeightSeries.First().Data.Average().Should().Be(5);
         }
 
         [Fact]
@@ -139,9 +139,9 @@ namespace FitnessFox.Tests
 
             await Subject.Refresh();
 
-            Subject.Series.Should().HaveCount(2);
+            Subject.WeightSeries.Should().HaveCount(2);
 
-            Subject.Series.Last().Data.Average().Should().Be(10);
+            Subject.WeightSeries.Last().Data.Average().Should().Be(10);
 
         }
     }
