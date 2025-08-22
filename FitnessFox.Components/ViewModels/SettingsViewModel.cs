@@ -9,7 +9,7 @@ namespace FitnessFox.Components.ViewModels
     public class SettingsViewModel : ViewModelBase
     {
         private readonly ISettingsService settingsService;
-        private readonly IGoogleSyncService googleSyncService;
+        private readonly ISyncService googleSyncService;
         private readonly ISnackbar snackbar;
         private readonly ApplicationDbContext dbContext;
         private readonly NavigationManager nav;
@@ -19,7 +19,7 @@ namespace FitnessFox.Components.ViewModels
             ILoggingService loggingService,
             ILoadingService loadingService,
             ISettingsService settingsService,
-            IGoogleSyncService googleSyncService,
+            ISyncService googleSyncService,
             ISnackbar snackbar,
             ApplicationDbContext dbContext,
             NavigationManager nav)

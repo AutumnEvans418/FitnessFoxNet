@@ -11,6 +11,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System;
@@ -22,38 +23,21 @@ using System.Threading.Tasks;
 
 namespace FitnessFox.Components.Services
 {
-    public class GoogleSyncService : IGoogleSyncService
+    public class GoogleSyncService : ISyncService
     {
-        private readonly IFileService fileService;
         private readonly ApplicationDbContext applicationDbContext;
-        private readonly IOptions<GoogleOptions> options;
-        private readonly ISettingsService settingsService;
-        string[] Scopes = { SheetsService.Scope.Spreadsheets };
-        string ApplicationName = "FitnessFox";
+        private readonly IGoogleSheetsServices googleSheetsServices;
 
         public GoogleSyncService(
-            IFileService fileService,
             ApplicationDbContext applicationDbContext,
-            IOptions<GoogleOptions> options,
-            ISettingsService settingsService)
+            IGoogleSheetsServices googleSheetsServices)
         {
-            this.fileService = fileService;
             this.applicationDbContext = applicationDbContext;
-            this.options = options;
-            this.settingsService = settingsService;
+            this.googleSheetsServices = googleSheetsServices;
         }
 
         public async Task Sync()
         {
-            var service = await GetSheetService();
-
-            var sheet = await GetSheet(service);
-
-            if (sheet == null)
-            {
-                return;
-            }
-
             string[] names = [
                 nameof(ApplicationUser),
                 nameof(Food),
@@ -65,63 +49,31 @@ namespace FitnessFox.Components.Services
                 nameof(UserSetting)
                 ];
 
-            await AddWorksheets(service, sheet, names);
+            await googleSheetsServices.AddWorksheets(names);
 
-            await SyncDbSet<ApplicationUser, string>(service, sheet);
-            await SyncDbSet<Food, int>(service, sheet);
-            await SyncDbSet<RecipeFood, int>(service, sheet);
-            await SyncDbSet<Recipe, int>(service, sheet);
-            await SyncDbSet<UserMeal, int>(service, sheet);
-            await SyncDbSet<UserVital, int>(service, sheet);
-            await SyncDbSet<UserGoal, int>(service, sheet);
-            await SyncDbSet<UserSetting, string>(service, sheet);
+            await SyncDbSet<ApplicationUser, string>();
+            await SyncDbSet<Food, Guid>();
+            await SyncDbSet<RecipeFood, Guid>();
+            await SyncDbSet<Recipe, Guid>();
+            await SyncDbSet<UserMeal, Guid>();
+            await SyncDbSet<UserVital, Guid>();
+            await SyncDbSet<UserGoal, Guid>();
+            await SyncDbSet<UserSetting, string>();
         }
 
-        public async Task<Spreadsheet?> GetSheet(SheetsService service)
-        {
-            var spreadSheetId = await settingsService.GetValue<string?>(SettingKey.SpreadsheetId);
-
-            if (string.IsNullOrEmpty(spreadSheetId))
-            {
-                return null;
-            }
-
-            var sheetRequest = service.Spreadsheets.Get(spreadSheetId);
-
-            sheetRequest.IncludeGridData = true;
-
-            var sheet = await sheetRequest.ExecuteAsync();
-            return sheet;
-        }
-
-        public async Task<SheetsService> GetSheetService()
-        {
-            using var stream = await fileService.GetLocalFileAsync(options.Value.FileName);
-            var credential = GoogleCredential.FromStream(stream).CreateScoped(Scopes);
-            var service = new SheetsService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = ApplicationName,
-            });
-
-
-            return service;
-        }
-
-        public async Task<List<T>> GetData<T>(Spreadsheet sheet) where T : class
+        public async Task<List<T>> GetData<T>() where T : class
         {
             var name = typeof(T).Name;
-            var sheetData = sheet.Sheets.First(s => s.Properties.Title == name).Data.First();
+            var sheetData = await googleSheetsServices.GetSheetRows(name);
 
-            if (sheetData.RowData == null)
+            if (sheetData == null || sheetData.Count == 0)
                 return [];
 
             var builder = new StringBuilder();
 
-            foreach (var row in sheetData.RowData)
+            foreach (var row in sheetData)
             {
-                var rowValue = row.Values.Select(v => v.FormattedValue).ToArray();
-                builder.AppendLine(string.Join(",", rowValue));
+                builder.AppendLine(string.Join(",", row));
             }
 
             var config = new CsvConfiguration(CultureInfo.InvariantCulture);
@@ -146,12 +98,12 @@ namespace FitnessFox.Components.Services
 
         }
 
-        async Task SyncDbSet<T, S>(SheetsService service, Spreadsheet sheet) where T : class, IEntityId<S>, IEntityAudit
+        async Task SyncDbSet<T, S>() where T : class, IEntityId<S>, IEntityAudit
         {
             var name = typeof(T).Name;
             var dbData = await applicationDbContext.Set<T>().ToListAsync();
 
-            var sheetData = await GetData<T>(sheet);
+            var sheetData = await GetData<T>();
 
             //add to db
             await UpdateDatabase<T, S>(dbData, sheetData);
@@ -194,22 +146,17 @@ namespace FitnessFox.Components.Services
             //rows
             foreach (var item in sheetDataToSend)
             {
-                var row = new List<object>();
+                var row = new List<object?>();
 
                 foreach (var property in properties)
                 {
-                    row.Add(type.GetProperty(property.Name).GetValue(item));
+                    row.Add(type.GetProperty(property.Name)?.GetValue(item)?.ToString());
                 }
 
                 range.Values.Add(row);
             }
-            var spreadSheetId = await settingsService.GetValue<string?>(SettingKey.SpreadsheetId);
 
-            var request = service.Spreadsheets.Values.Update(range, spreadSheetId, $"{name}!A1");
-
-            request.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
-
-            await request.ExecuteAsync();
+            await googleSheetsServices.UpdateSheet($"{name}!A1", range.Values);
         }
 
         private async Task UpdateDatabase<T, S>(List<T> dbData, List<T> sheetData) where T : class, IEntityId<S>, IEntityAudit
@@ -229,26 +176,5 @@ namespace FitnessFox.Components.Services
             await applicationDbContext.SaveChangesAsync();
         }
 
-        async Task AddWorksheets(SheetsService service, Spreadsheet sheets, string[] sheetNames)
-        {
-            var request = new BatchUpdateSpreadsheetRequest() { Requests = new List<Google.Apis.Sheets.v4.Data.Request>() };
-
-            foreach (string sheetName in sheetNames)
-            {
-                if (sheets.Sheets.Any(s => s.Properties.Title == sheetName))
-                    continue;
-
-
-                request.Requests.Add(new Google.Apis.Sheets.v4.Data.Request { AddSheet = new AddSheetRequest() { Properties = new SheetProperties { Title = sheetName } } });
-
-            }
-
-            if (request.Requests.Count > 0)
-            {
-                var spreadSheetId = await settingsService.GetValue<string?>(SettingKey.SpreadsheetId);
-
-                await service.Spreadsheets.BatchUpdate(request, spreadSheetId).ExecuteAsync();
-            }
-        }
     }
 }

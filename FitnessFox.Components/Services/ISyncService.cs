@@ -1,7 +1,7 @@
 ﻿
 namespace FitnessFox.Components.Services
 {
-    public interface IGoogleSyncService
+    public interface ISyncService
     {
         Task Sync();
     }

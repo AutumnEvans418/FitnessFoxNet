@@ -34,7 +34,7 @@ namespace FitnessFox.Components.ViewModels.Foods
         }
         public Recipe? Model { get; set; }
 
-        public int? Id { get; set; }
+        public string? Id { get; set; }
         public override async Task OnInitializedAsync()
         {
             await Load(Refresh);
@@ -48,7 +48,7 @@ namespace FitnessFox.Components.ViewModels.Foods
                     .Recipes
                     .Include(r => r.Foods)
                     .ThenInclude(r => r.Food)
-                    .FirstAsync(f => f.Id == Id);
+                    .FirstAsync(f => f.Id.ToString() == Id);
             }
             Model ??= new();
         }

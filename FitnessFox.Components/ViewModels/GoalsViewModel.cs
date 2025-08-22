@@ -63,7 +63,7 @@ namespace FitnessFox.Components.ViewModels
 
             StateHasChanged();
         }
-
+        
         public async Task Save(UserGoal goal)
         {
             if (goal.Type == UserGoalType.WeightLbs && User.HeightInches >= 0)

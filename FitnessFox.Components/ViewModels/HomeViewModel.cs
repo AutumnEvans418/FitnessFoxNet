@@ -11,7 +11,7 @@ namespace FitnessFox.Components.ViewModels
     {
         private readonly IAuthenticationService authenticationService;
         private readonly ISettingsService settingsService;
-        private readonly IGoogleSyncService googleSyncService;
+        private readonly ISyncService googleSyncService;
         private readonly ISnackbar snackbar;
         private readonly ApplicationDbContext dbContext;
 
@@ -21,7 +21,7 @@ namespace FitnessFox.Components.ViewModels
             ILoadingService loadingService,
             IAuthenticationService authenticationService,
             ISettingsService settingsService,
-            IGoogleSyncService googleSyncService,
+            ISyncService googleSyncService,
             ISnackbar snackbar,
             ApplicationDbContext applicationDbContext) 
             : base(mudDialogInstance, loggingService, loadingService)

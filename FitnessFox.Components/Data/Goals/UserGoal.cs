@@ -1,8 +1,8 @@
 namespace FitnessFox.Data.Goals
 {
-    public class UserGoal : IEntityId<int>, IEntityAudit
+    public class UserGoal : IEntityId<Guid>, IEntityAudit
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime DateModified { get; set; }
         public UserGoalType Type { get; set; }

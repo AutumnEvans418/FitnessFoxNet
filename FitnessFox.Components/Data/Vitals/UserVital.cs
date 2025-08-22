@@ -1,8 +1,8 @@
 namespace FitnessFox.Data.Vitals
 {
-    public class UserVital : IEntityAudit, IEntityId<int>
+    public class UserVital : IEntityAudit, IEntityId<Guid>
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string UserId { get; set; } = null!;
         public DateTime Date { get; set; }
         public DateTime DateCreated { get; set; }

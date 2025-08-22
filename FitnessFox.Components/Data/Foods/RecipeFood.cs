@@ -1,8 +1,8 @@
 namespace FitnessFox.Data.Foods
 {
-    public class RecipeFood : IEntityId<int>, IEntityAudit
+    public class RecipeFood : IEntityId<Guid>, IEntityAudit
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public int RecipeId { get; set; }
         public int FoodId { get; set; }
         public float Amount { get; set; }

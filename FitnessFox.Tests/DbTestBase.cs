@@ -7,7 +7,7 @@ using NSubstitute;
 
 namespace FitnessFox.Tests
 {
-    public abstract class DbTestBase<T>
+    public abstract class DbTestBase<T> : IDisposable
     {
         public SqliteConnection Connection { get; set; }
         public Fixture Fixture { get; set; }
@@ -45,6 +45,12 @@ namespace FitnessFox.Tests
         public virtual void Setup()
         {
 
+        }
+
+        public void Dispose()
+        {
+            ((IDisposable)Connection).Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

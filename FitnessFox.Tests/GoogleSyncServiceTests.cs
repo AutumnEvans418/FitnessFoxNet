@@ -3,6 +3,7 @@ using FitnessFox.Components.Data.Options;
 using FitnessFox.Components.Services;
 using FitnessFox.Data;
 using FitnessFox.Data.Foods;
+using FitnessFox.Data.Goals;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -12,51 +13,35 @@ using NSubstitute;
 namespace FitnessFox.Tests
 {
     
-    public class GoogleSyncServiceTests : IDisposable
+    public class GoogleSyncServiceTests : DbTestBase<GoogleSyncService>
     {
-        GoogleSyncService GoogleSyncService { get; set; }
-        DbContextOptions<ApplicationDbContext> DbOptions { get; set; }
-        public ApplicationDbContext Db { get; set; }
-        public Fixture Fixture { get; set; }
-        public SqliteConnection Connection { get; set; }
-        public GoogleSyncServiceTests()
+
+        IGoogleSheetsServices GoogleSheetsServices { get; set; }
+
+        public override void Setup()
         {
-            Connection = new SqliteConnection("Filename=:memory:");
-            Connection.Open();
-            var fixture = new Fixture();
-            fixture.Customize(new AutoFixture.AutoNSubstitute.AutoNSubstituteCustomization());
-            Fixture = fixture;
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(Connection).Options;
-            DbOptions = options;
-            var db = new ApplicationDbContext(options);
-            Db = db;
-            db.Database.EnsureDeleted();
-            db.Database.EnsureCreated();
-            fixture.Inject(db);
+            GoogleSheetsServices = Fixture.Freeze<IGoogleSheetsServices>();
 
-            var file = fixture.Freeze<IFileService>();
-
-            var stream = File.OpenRead("..\\..\\..\\..\\FitnessFox.Mobile\\Resources\\Raw\\fitnessfox-467923-9857f7a3ab7e.json");
-
-            file.GetLocalFileAsync(Arg.Any<string>()).Returns(stream);
-
-            fixture.Inject(Options.Create(new GoogleOptions()));
-
-            GoogleSyncService = fixture.Build<GoogleSyncService>().OmitAutoProperties().Create();
+            base.Setup();
         }
 
-        [Fact(Skip = "test")]
+        [Fact]
         public async Task GetData()
         {
-            var service = await GoogleSyncService.GetSheetService();
-            var sheet = await GoogleSyncService.GetSheet(service);
+            var userId = await AuthenticationService.GetUserAsync();
+            List<List<string>> data = [
+                ["Id", "UserId"],
+                [Guid.NewGuid().ToString(), userId.Id]
+                ];
 
-            var result = await GoogleSyncService.GetData<Food>(sheet);
+            GoogleSheetsServices.GetSheetRows("Food").Returns(data);
+
+            var result = await Subject.GetData<Food>();
 
             result.Should().NotBeEmpty();
         }
 
-        [Fact(Skip = "test2")]
+        [Fact]
         public async Task SyncData()
         {
             var db = Db;
@@ -72,12 +57,49 @@ namespace FitnessFox.Tests
 
             db.SaveChanges();
 
-            await GoogleSyncService.Sync();
+            await Subject.Sync();
+
+            await GoogleSheetsServices.Received(1).UpdateSheet(Arg.Is<string>(s => s.StartsWith("Food")), Arg.Is<IList<IList<object>>>(o => o.Count == 2));
         }
 
-        public void Dispose()
+        [Fact]
+        public async Task GetEnums()
         {
-            ((IDisposable)Connection).Dispose();
+            var userId = await AuthenticationService.GetUserAsync();
+            List<List<string>> data = [
+                ["Id", "UserId", "Type"],
+                [Guid.NewGuid().ToString(), userId.Id, ((int)(UserGoalType.Bmi)).ToString()],
+                [Guid.NewGuid().ToString(), userId.Id, (UserGoalType.VitaminK).ToString()]
+                ];
+
+            GoogleSheetsServices.GetSheetRows(nameof(UserGoal)).Returns(data);
+
+            var result = await Subject.GetData<UserGoal>();
+
+            result.Should().HaveCount(2);
+            result[0].Type.Should().Be(UserGoalType.Bmi);
+            result[1].Type.Should().Be(UserGoalType.VitaminK);
+        }
+
+        [Fact]
+        public async Task UpdateEnumsAsString()
+        {
+            var user = await AuthenticationService.GetUserAsync();
+
+            Db.UserGoals.AddRange(Fixture
+                .Build<UserGoal>()
+                .Without(u => u.User)
+                .With(u => u.UserId, user.Id)
+                .With(u => u.Type, UserGoalType.Bmi)
+                .CreateMany(3));
+            Db.SaveChanges();
+
+            await Subject.Sync();
+
+            await GoogleSheetsServices
+                .Received(1)
+                .UpdateSheet(Arg.Is<string>(s => s.StartsWith(nameof(UserGoal))), Arg.Is<IList<IList<object>>>(o => o.Count == 4 && o[1][3].ToString() == UserGoalType.Bmi.ToString()));
+
         }
     }
 }

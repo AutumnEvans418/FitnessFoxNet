@@ -1,5 +1,5 @@
 ﻿@page "/foods/add"
-@page "/foods/{id:int}"
+@page "/foods/{id}"
 @using FitnessFox.Components.ViewModels.Foods
 @using FitnessFox.Data.Foods
 @attribute [Authorize]
@@ -46,7 +46,7 @@
     public Food? Model { get => Vm.Model; set => Vm.Model = value; }
 
     [Parameter]
-    public int? Id { get; set; }
+    public string? Id { get; set; }
 
     protected override void OnInitialized()
     {

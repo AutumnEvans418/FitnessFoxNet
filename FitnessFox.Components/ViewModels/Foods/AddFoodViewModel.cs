@@ -37,7 +37,7 @@ namespace FitnessFox.Components.ViewModels.Foods
         public Food? Model { get; set; }
         public List<string> Units { get; set; } = [];
 
-        public int? Id { get; set; }
+        public string? Id { get; set; }
 
         public override async Task OnInitializedAsync()
         {
@@ -48,7 +48,7 @@ namespace FitnessFox.Components.ViewModels.Foods
         {
             if (Id != null)
             {
-                Model = await dbContext.Foods.FirstAsync(f => f.Id == Id);
+                Model = await dbContext.Foods.FirstAsync(f => f.Id.ToString() == Id);
             }
             Model ??= new();
 

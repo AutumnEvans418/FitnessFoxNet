@@ -22,7 +22,7 @@ namespace FitnessFox.Mobile
                 });
             builder.Services.AddScoped<AuthenticationStateProvider, ApplicationDbContextStateProvider>();
 
-            builder.Services.AddScoped<IGoogleSyncService, GoogleSyncService>();
+            builder.Services.AddScoped<ISyncService, GoogleSyncService>();
             builder.Services.AddScoped<ISettingsService, SettingsService>();
             builder.Services.AddScoped<IFileService, MauiFileService>();
             builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();

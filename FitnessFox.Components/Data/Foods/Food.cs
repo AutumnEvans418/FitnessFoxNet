@@ -2,9 +2,9 @@ using Microsoft.VisualBasic;
 
 namespace FitnessFox.Data.Foods
 {
-    public class Food : Nutrients, IEntityId<int>, IEntityAudit
+    public class Food : Nutrients, IEntityId<Guid>, IEntityAudit
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string UserId { get; set; } = null!;
         public DateTime DateCreated { get; set; }
         public DateTime DateModified { get; set; }
