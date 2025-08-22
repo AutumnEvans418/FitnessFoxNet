@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FitnessFox.Tests
+namespace FitnessFox.Tests.ViewModels
 {
     public class ReportsViewModelTests : DbTestBase<ReportsViewModel>
     {

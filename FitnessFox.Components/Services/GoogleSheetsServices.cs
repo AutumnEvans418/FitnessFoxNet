@@ -28,6 +28,12 @@ namespace FitnessFox.Components.Services
             this.fileService = fileService;
         }
 
+        public async Task LoadSheet()
+        {
+            service = await GetSheetService();
+            sheets = await GetSheet(service);
+        }
+
         public async Task AddWorksheets(string[] sheetNames)
         {
             service ??= await GetSheetService();

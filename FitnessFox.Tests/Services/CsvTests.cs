@@ -6,7 +6,7 @@ using System.Data;
 using System.Globalization;
 using Xunit;
 
-namespace FitnessFox.Tests
+namespace FitnessFox.Tests.Services
 {
     public class CsvTests
     {

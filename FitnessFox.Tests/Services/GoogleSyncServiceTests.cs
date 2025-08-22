@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 
-namespace FitnessFox.Tests
+namespace FitnessFox.Tests.Services
 {
     
     public class GoogleSyncServiceTests : DbTestBase<GoogleSyncService>
@@ -68,8 +68,8 @@ namespace FitnessFox.Tests
             var userId = await AuthenticationService.GetUserAsync();
             List<List<string>> data = [
                 ["Id", "UserId", "Type"],
-                [Guid.NewGuid().ToString(), userId.Id, ((int)(UserGoalType.Bmi)).ToString()],
-                [Guid.NewGuid().ToString(), userId.Id, (UserGoalType.VitaminK).ToString()]
+                [Guid.NewGuid().ToString(), userId.Id, ((int)UserGoalType.Bmi).ToString()],
+                [Guid.NewGuid().ToString(), userId.Id, UserGoalType.VitaminK.ToString()]
                 ];
 
             GoogleSheetsServices.GetSheetRows(nameof(UserGoal)).Returns(data);

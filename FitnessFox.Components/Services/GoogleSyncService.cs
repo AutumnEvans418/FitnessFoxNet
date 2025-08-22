@@ -49,6 +49,8 @@ namespace FitnessFox.Components.Services
                 nameof(UserSetting)
                 ];
 
+            await googleSheetsServices.LoadSheet();
+
             await googleSheetsServices.AddWorksheets(names);
 
             await SyncDbSet<ApplicationUser, string>();

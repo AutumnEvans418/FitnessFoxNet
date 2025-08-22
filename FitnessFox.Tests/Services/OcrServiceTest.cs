@@ -1,7 +1,7 @@
 using FitnessFox.Components.Services;
 using FluentAssertions;
 
-namespace FitnessFox.Tests
+namespace FitnessFox.Tests.Services
 {
     public class OcrServiceTest
     {
