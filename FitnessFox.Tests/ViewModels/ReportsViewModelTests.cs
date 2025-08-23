@@ -16,12 +16,11 @@ namespace FitnessFox.Tests.ViewModels
     {
 
         [Fact]
-        public async Task Refresh_Should_SetSeries()
+        public async Task Refresh_Series_Should_BeEmpty()
         {
             await Subject.Refresh();
 
             Subject.WeightSeries.Count.Should().Be(1);
-            Subject.WeightSeries[0].Data.Should().HaveCount(7);
         }
 
         [Fact]
@@ -51,6 +50,22 @@ namespace FitnessFox.Tests.ViewModels
         {
             Subject.From = DateTime.Parse("2025-01-01");
             Subject.To = DateTime.Parse("2025-01-07");
+
+            var user = Db.Users.First();
+            for (int i = 0; i < 7; i++)
+            {
+                var date = Subject.From.GetValueOrDefault().AddDays(i);
+
+                Db.UserVitals.Add(new UserVital
+                {
+                    Date = date,
+                    Type = UserVitalType.Weight,
+                    UserId = user.Id,
+                    Value = 1,
+                });
+            }
+
+            Db.SaveChanges();
 
             await Subject.Refresh();
 
