@@ -1,4 +1,5 @@
-﻿using FitnessFox.Components.Services;
+﻿using FitnessFox.Components;
+using FitnessFox.Components.Services;
 using FitnessFox.Components.ViewModels;
 using FitnessFox.Data;
 using FitnessFox.Mobile.Services;
@@ -21,25 +22,9 @@ namespace FitnessFox.Mobile
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
             builder.Services.AddScoped<AuthenticationStateProvider, ApplicationDbContextStateProvider>();
-
-            builder.Services.AddScoped<ISyncService, GoogleSyncService>();
-            builder.Services.AddScoped<IGoogleSheetsServices, GoogleSheetsServices>();
-            builder.Services.AddScoped<ISettingsService, SettingsService>();
             builder.Services.AddScoped<IFileService, MauiFileService>();
-            builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-            builder.Services.AddScoped<ILoggingService, LoggingService>();
 
-            builder.Services.AddScoped<ILoadingService, LoadingService>();
-
-            var viewModels = typeof(ViewModelBase).Assembly
-                .GetTypes()
-                .Where(t => t.IsAssignableTo(typeof(ViewModelBase)))
-                .ToList();
-
-            foreach (var viewModel in viewModels)
-            {
-                builder.Services.AddTransient(viewModel);
-            }
+            builder.Services.RegisterComponentDependencies();
 
             builder.Services.AddAuthorizationCore();
 
