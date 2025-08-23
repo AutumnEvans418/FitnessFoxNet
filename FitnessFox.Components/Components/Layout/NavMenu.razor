@@ -12,7 +12,7 @@
     <MudNavLink Icon="@Icons.Material.Filled.Settings" Href="/settings" Match="NavLinkMatch.All">Settings</MudNavLink>
     <AuthorizeView>
         <Authorized>
-            <MudNavLink Icon="@Icons.Material.Filled.Person2" Href="Account/Manage" Match="NavLinkMatch.All">@context.User.Identity?.Name</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.Person2" Href="Account/Manage" Match="NavLinkMatch.All">@(context.User.Identity?.Name ?? "Manage")</MudNavLink>
             
             <div class="mud-nav-item"> 
                 <form action="Account/Logout" method="post">

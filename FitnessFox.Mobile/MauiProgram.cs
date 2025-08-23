@@ -49,7 +49,7 @@ namespace FitnessFox.Mobile
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlite($"Data Source=" + Path.Combine(FileSystem.AppDataDirectory, "database.dat"));
-            });
+            }, ServiceLifetime.Transient, ServiceLifetime.Transient);
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();

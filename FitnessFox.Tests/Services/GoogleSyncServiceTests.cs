@@ -4,6 +4,7 @@ using FitnessFox.Components.Services;
 using FitnessFox.Data;
 using FitnessFox.Data.Foods;
 using FitnessFox.Data.Goals;
+using FitnessFox.Data.Vitals;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -28,10 +29,10 @@ namespace FitnessFox.Tests.Services
         [Fact]
         public async Task GetData()
         {
-            var userId = await AuthenticationService.GetUserAsync();
+            var user = await AuthenticationService.GetUserAsync();
             List<List<string>> data = [
                 ["Id", "UserId"],
-                [Guid.NewGuid().ToString(), userId.Id]
+                [Guid.NewGuid().ToString(), user.Id]
                 ];
 
             GoogleSheetsServices.GetSheetRows("Food").Returns(data);
@@ -42,13 +43,123 @@ namespace FitnessFox.Tests.Services
         }
 
         [Fact]
-        public async Task SyncData()
+        public async Task SyncData_Sheets_Should_ExcludeMissingIds()
         {
             var db = Db;
 
-            var user = new ApplicationUser();
-            user.Id = "26218fa1-7163-4b42-aa57-51ef66515203";
-            db.Users.Add(user);
+            var user = await AuthenticationService.GetUserAsync();
+
+            List<List<string>> data = [
+                ["Id", "UserId"],
+                [Guid.NewGuid().ToString(), user.Id],
+                ["", ""],
+                [null, null]
+                ];
+
+            GoogleSheetsServices.GetSheetRows(nameof(UserVital)).Returns(data);
+
+
+            await Subject.Sync();
+
+            db.UserVitals.Should().HaveCount(1);
+        }
+
+        [Fact]
+        public async Task Sync_MatchingData_ShouldNotChange()
+        {
+            var db = Db;
+
+            var user = await AuthenticationService.GetUserAsync();
+
+            var vital = Db.UserVitals.Add(Fixture.Build<UserVital>()
+                .Without(p => p.User)
+                .With(p => p.UserId, user.Id)
+                .Create());
+
+            Db.SaveChanges();
+
+            List<List<string>> data = [
+                [nameof(UserVital.Id), nameof(UserVital.UserId), nameof(UserVital.DateModified)],
+                [vital.Entity.Id.ToString(), user.Id, vital.Entity.DateModified.ToString()],
+                ];
+
+            GoogleSheetsServices.GetSheetRows(nameof(UserVital)).Returns(data);
+
+            await Subject.SyncDbSet<UserVital, Guid>();
+
+            db.UserVitals.Should().HaveCount(1);
+            await GoogleSheetsServices.DidNotReceive().UpdateSheet(Arg.Is<string>(s => s.StartsWith(nameof(UserVital))), Arg.Any<IList<IList<object>>>());
+        }
+
+        [Fact]
+        public async Task Sync_ExistingDataUpdatedInSheets_ShouldChangeDb()
+        {
+            var db = Db;
+
+            var user = await AuthenticationService.GetUserAsync();
+
+            var vital = Db.UserVitals.Add(Fixture.Build<UserVital>()
+                .Without(p => p.User)
+                .With(p => p.UserId, user.Id)
+                .Create());
+
+            Db.SaveChanges();
+
+            var value = vital.Entity.Value + 10;
+
+            List<List<string>> data = [
+                [nameof(UserVital.Id), nameof(UserVital.UserId), nameof(UserVital.DateModified), nameof(UserVital.Value)],
+                [vital.Entity.Id.ToString(), user.Id, vital.Entity.DateModified.AddDays(1).ToString(), (value).ToString()],
+                ];
+
+            GoogleSheetsServices.GetSheetRows(nameof(UserVital)).Returns(data);
+
+            await Subject.SyncDbSet<UserVital, Guid>();
+
+            db.UserVitals.Should().HaveCount(1);
+
+            db.UserVitals.First().Value.Should().Be(value);
+
+            await GoogleSheetsServices.DidNotReceive().UpdateSheet(Arg.Is<string>(s => s.StartsWith(nameof(UserVital))), Arg.Any<IList<IList<object>>>());
+        }
+
+        [Fact]
+        public async Task Sync_ExistingDataUpdatedInDb_ShouldChangeSheets()
+        {
+            var db = Db;
+
+            var user = await AuthenticationService.GetUserAsync();
+
+            var vital = Db.UserVitals.Add(Fixture.Build<UserVital>()
+                .Without(p => p.User)
+                .With(p => p.UserId, user.Id)
+                .Create());
+
+            Db.SaveChanges();
+
+            List<List<string>> data = [
+                [nameof(UserVital.Id), nameof(UserVital.UserId), nameof(UserVital.DateModified), nameof(UserVital.Value)],
+                [vital.Entity.Id.ToString(), user.Id, vital.Entity.DateModified.AddDays(-1).ToString(), (vital.Entity.Value + 10).ToString()],
+                ];
+
+            GoogleSheetsServices.GetSheetRows(nameof(UserVital)).Returns(data);
+
+
+            await Subject.Sync();
+
+            db.UserVitals.Should().HaveCount(1);
+
+            db.UserVitals.First().Value.Should().Be(vital.Entity.Value);
+
+            await GoogleSheetsServices.Received(1).UpdateSheet(Arg.Is<string>(s => s.StartsWith(nameof(UserVital))), Arg.Any<IList<IList<object>>>());
+        }
+
+        [Fact]
+        public async Task SyncData_Db_ShouldUpdateSheet()
+        {
+            var db = Db;
+
+            var user = await AuthenticationService.GetUserAsync();
 
             db.Foods.Add(Fixture.Build<Food>()
                 .Without(p => p.User)

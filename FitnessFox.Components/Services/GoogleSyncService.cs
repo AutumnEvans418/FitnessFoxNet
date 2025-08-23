@@ -20,6 +20,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace FitnessFox.Components.Services
 {
@@ -75,6 +76,11 @@ namespace FitnessFox.Components.Services
 
             foreach (var row in sheetData)
             {
+                if (row.All(string.IsNullOrWhiteSpace))
+                {
+                    continue;
+                }
+
                 builder.AppendLine(string.Join(",", row));
             }
 
@@ -100,29 +106,51 @@ namespace FitnessFox.Components.Services
 
         }
 
-        async Task SyncDbSet<T, S>() where T : class, IEntityId<S>, IEntityAudit
+        public async Task SyncDbSet<T, S>() where T : class, IEntityId<S>, IEntityAudit
         {
-            var name = typeof(T).Name;
             var dbData = await applicationDbContext.Set<T>().ToListAsync();
 
             var sheetData = await GetData<T>();
 
-            //add to db
+            await UpdateSheet<T, S>(dbData, sheetData);
             await UpdateDatabase<T, S>(dbData, sheetData);
+        }
 
+        private async Task UpdateSheet<T, S>(List<T> dbData, List<T> sheetData) where T : class, IEntityId<S>, IEntityAudit
+        {
+            var name = typeof(T).Name;
+
+            //Sheet data that was not in Db.
             var sheetDataToSend = sheetData.Where(s => !dbData.Select(d => d.Id).Contains(s.Id)).ToList();
 
-            //update sheet
+            //Sheet data with matching records that hasn't changed.
+            var upToDateSheetInfo = (
+                from sheetItem in sheetData
+                join dbRow in dbData on sheetItem.Id equals dbRow.Id
+                where (dbRow.DateModified - sheetItem.DateModified) <= TimeSpan.FromSeconds(1)
+                select dbRow).ToList();
+
+            sheetDataToSend.AddRange(upToDateSheetInfo);
+
+            //Sheet data with matching records where the db is newer
             var updatedSheetInfo = (
                 from sheetItem in sheetData
                 join dbRow in dbData on sheetItem.Id equals dbRow.Id
-                select dbRow.DateModified > sheetItem.DateModified ? dbRow : sheetItem).ToList();
+                where (dbRow.DateModified - sheetItem.DateModified) > TimeSpan.FromSeconds(1)
+                select dbRow).ToList();
 
             sheetDataToSend.AddRange(updatedSheetInfo);
 
-            //add to sheet
+
+
+            //Db data that was not in the sheet
             var missingDbInfo = dbData.Where(d => !sheetData.Select(s => s.Id).Contains(d.Id)).ToList();
             sheetDataToSend.AddRange(missingDbInfo);
+
+            if (updatedSheetInfo.Count == 0 && missingDbInfo.Count == 0)
+            {
+                return;
+            }
 
             var entityType = applicationDbContext.Model.FindEntityType(typeof(T)) ?? throw new Exception();
 
@@ -170,13 +198,19 @@ namespace FitnessFox.Components.Services
             var updatedSheetInfo = (
                 from dbRow in dbData
                 join sheet in sheetData on dbRow.Id equals sheet.Id
-                where sheet.DateModified > dbRow.DateModified
-                select sheet).ToList();
+                where (sheet.DateModified - dbRow.DateModified) > TimeSpan.FromSeconds(1)
+                select new { From = dbRow, To = sheet }).ToList();
 
-            applicationDbContext.UpdateRange(updatedSheetInfo);
+            foreach (var item in updatedSheetInfo)
+            {
+                applicationDbContext.Entry(item.From).CurrentValues.SetValues(item.To);
+                applicationDbContext.Update(item.From);
+            }
 
             await applicationDbContext.SaveChangesAsync();
         }
+
+        
 
     }
 }

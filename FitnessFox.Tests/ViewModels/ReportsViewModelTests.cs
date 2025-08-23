@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FitnessFox.Tests.ViewModels
 {
@@ -24,7 +25,7 @@ namespace FitnessFox.Tests.ViewModels
         }
 
         [Fact]
-        public async Task Monthly_Should_Have7()
+        public async Task Monthly_Should_Have1()
         {
             var user = Db.Users.First();
 
@@ -32,6 +33,7 @@ namespace FitnessFox.Tests.ViewModels
                 .With(w => w.UserId, user.Id)
                 .Without(w => w.User)
                 .With(w => w.Type, UserVitalType.Weight)
+                .With(w => w.Date, Subject.From.GetValueOrDefault())
                 .CreateMany(10);
 
             Db.UserVitals.AddRange(vitals);
@@ -41,7 +43,7 @@ namespace FitnessFox.Tests.ViewModels
 
             await Subject.Refresh();
 
-            Subject.WeightSeries[0].Data.Should().HaveCount(7);
+            Subject.WeightSeries[0].Data.Should().HaveCount(1);
         }
 
         [Fact]
@@ -126,6 +128,9 @@ namespace FitnessFox.Tests.ViewModels
         [Fact]
         public async Task GoalWeight_Should_CreateSeries()
         {
+            Subject.From = DateTime.Parse("2025-01-01");
+            Subject.To = DateTime.Parse("2025-01-14");
+
             var user = Db.Users.First();
 
             Db.UserGoals.Add(new Data.Goals.UserGoal
@@ -133,6 +138,14 @@ namespace FitnessFox.Tests.ViewModels
                 UserId = user.Id,
                 Type = Data.Goals.UserGoalType.WeightLbs,
                 Value = 10,
+            });
+
+            Db.UserVitals.Add(new UserVital
+            {
+                Date = Subject.From.GetValueOrDefault(),
+                Type = UserVitalType.Weight,
+                UserId = user.Id,
+                Value = 3,
             });
 
             Db.SaveChanges();
