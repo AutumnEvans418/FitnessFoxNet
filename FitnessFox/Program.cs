@@ -1,13 +1,12 @@
 using FitnessFox.Components;
 using FitnessFox.Components.Account;
+using FitnessFox.Components.Services;
 using FitnessFox.Data;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
-
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +27,6 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-
 var dbType = builder.Configuration["DatabaseType"];
 
 if(dbType == "SqlServer")
@@ -41,13 +39,16 @@ else if(dbType == "Sqlite")
 {
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
-        options.UseSqlite("Data Source=database.dat");
+        options.UseSqlite("Data Source=database.dat").EnableSensitiveDataLogging().EnableDetailedErrors();
     });
     builder.Services.AddDbContext<IdentityDbContext>(options =>
     {
-        options.UseSqlite("Data Source=database.dat");
+        options.UseSqlite("Data Source=identity.dat").EnableSensitiveDataLogging().EnableDetailedErrors();
     });
 }
+
+builder.Services.RegisterComponentDependencies();
+builder.Services.AddScoped<IFileService, FileService>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -61,6 +62,9 @@ builder.Services.AddSingleton<IEmailSender<IdentityUser>, IdentityNoOpEmailSende
 var app = builder.Build();
 
 using var scope = app.Services.CreateScope();
+
+var idDb = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+await idDb.Database.EnsureCreatedAsync();
 
 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 await db.Database.EnsureCreatedAsync();

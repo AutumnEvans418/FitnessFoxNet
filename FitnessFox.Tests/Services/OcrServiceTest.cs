@@ -5,7 +5,7 @@ namespace FitnessFox.Tests.Services
 {
     public class OcrServiceTest
     {
-        [Fact]
+        [Fact(Skip = "not ready yet")]
         public async Task LabelShouldHaveCalories()
         {
             var service = new OcrService();

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -28,13 +29,16 @@ namespace FitnessFox.Components.Services
     {
         private readonly ApplicationDbContext applicationDbContext;
         private readonly IGoogleSheetsServices googleSheetsServices;
+        private readonly IAuthenticationService authenticationService;
 
         public GoogleSyncService(
             ApplicationDbContext applicationDbContext,
-            IGoogleSheetsServices googleSheetsServices)
+            IGoogleSheetsServices googleSheetsServices,
+            IAuthenticationService authenticationService)
         {
             this.applicationDbContext = applicationDbContext;
             this.googleSheetsServices = googleSheetsServices;
+            this.authenticationService = authenticationService;
         }
 
         public async Task Sync()
@@ -54,14 +58,19 @@ namespace FitnessFox.Components.Services
 
             await googleSheetsServices.AddWorksheets(names);
 
-            await SyncDbSet<ApplicationUser, string>();
-            await SyncDbSet<Food, Guid>();
-            await SyncDbSet<RecipeFood, Guid>();
-            await SyncDbSet<Recipe, Guid>();
-            await SyncDbSet<UserMeal, Guid>();
-            await SyncDbSet<UserVital, Guid>();
-            await SyncDbSet<UserGoal, Guid>();
-            await SyncDbSet<UserSetting, string>();
+            var user = await authenticationService.GetUserAsync();
+
+            if (user == null)
+                return;
+
+            //await SyncDbSet<ApplicationUser, string>(a => a.Id == user.Id, a => { });
+            await SyncDbSet<Food, Guid>(f => f.UserId == user.Id, a => a.UserId = user.Id);
+            await SyncDbSet<RecipeFood, Guid>(rf => rf.Recipe!.UserId == user.Id, a => a.Recipe!.UserId = user.Id);
+            await SyncDbSet<Recipe, Guid>(r => r.UserId == user.Id, a => a.UserId = user.Id);
+            await SyncDbSet<UserMeal, Guid>(u => u.UserId == user.Id, a => a.UserId = user.Id);
+            await SyncDbSet<UserVital, Guid>(u => u.UserId == user.Id, a => a.UserId = user.Id);
+            await SyncDbSet<UserGoal, Guid>(u => u.UserId == user.Id, a => a.UserId = user.Id);
+            await SyncDbSet<UserSetting, string>(u => u.UserId == user.Id, a => a.UserId = user.Id);
         }
 
         public async Task<List<T>> GetData<T>() where T : class
@@ -106,14 +115,14 @@ namespace FitnessFox.Components.Services
 
         }
 
-        public async Task SyncDbSet<T, S>() where T : class, IEntityId<S>, IEntityAudit
+        public async Task SyncDbSet<T, S>(Expression<Func<T, bool>> filter, Action<T> action) where T : class, IEntityId<S>, IEntityAudit
         {
-            var dbData = await applicationDbContext.Set<T>().ToListAsync();
+            var dbData = await applicationDbContext.Set<T>().Where(filter).ToListAsync();
 
             var sheetData = await GetData<T>();
 
             await UpdateSheet<T, S>(dbData, sheetData);
-            await UpdateDatabase<T, S>(dbData, sheetData);
+            await UpdateDatabase<T, S>(dbData, sheetData, action);
         }
 
         private async Task UpdateSheet<T, S>(List<T> dbData, List<T> sheetData) where T : class, IEntityId<S>, IEntityAudit
@@ -189,11 +198,15 @@ namespace FitnessFox.Components.Services
             await googleSheetsServices.UpdateSheet($"{name}!A1", range.Values);
         }
 
-        private async Task UpdateDatabase<T, S>(List<T> dbData, List<T> sheetData) where T : class, IEntityId<S>, IEntityAudit
+        private async Task UpdateDatabase<T, S>(List<T> dbData, List<T> sheetData, Action<T> action) where T : class, IEntityId<S>, IEntityAudit
         {
             var missingSheetInfo = sheetData.Where(s => !dbData.Select(d => d.Id).Contains(s.Id)).ToList();
 
-            await applicationDbContext.AddRangeAsync(missingSheetInfo);
+            foreach (var item in missingSheetInfo)
+            {
+                action(item);
+                applicationDbContext.Add(item);
+            }
 
             var updatedSheetInfo = (
                 from dbRow in dbData
@@ -204,6 +217,7 @@ namespace FitnessFox.Components.Services
             foreach (var item in updatedSheetInfo)
             {
                 applicationDbContext.Entry(item.From).CurrentValues.SetValues(item.To);
+                action(item.From);
                 applicationDbContext.Update(item.From);
             }
 

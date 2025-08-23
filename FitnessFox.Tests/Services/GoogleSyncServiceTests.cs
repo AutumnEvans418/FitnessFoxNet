@@ -35,11 +35,82 @@ namespace FitnessFox.Tests.Services
                 [Guid.NewGuid().ToString(), user.Id]
                 ];
 
-            GoogleSheetsServices.GetSheetRows("Food").Returns(data);
+            GoogleSheetsServices.GetSheetRows(nameof(Food)).Returns(data);
 
             var result = await Subject.GetData<Food>();
 
             result.Should().NotBeEmpty();
+        }
+
+        [Fact]
+        public async Task SyncData_LoggedInUser_ShouldSyncOnly()
+        {
+            var db = Db;
+
+            var user = await AuthenticationService.GetUserAsync();
+
+            var otherUser = Fixture.Create<ApplicationUser>();
+
+            db.Users.Add(otherUser);
+
+            var vitals = Fixture.Build<UserVital>()
+                .Without(p => p.User)
+                .With(p => p.UserId, user.Id)
+                .CreateMany(10);
+
+            var otherUservitals = Fixture.Build<UserVital>()
+                .Without(p => p.User)
+                .With(p => p.UserId, otherUser.Id)
+                .CreateMany(10);
+
+            db.UserVitals.AddRange(vitals);
+            db.UserVitals.AddRange(otherUservitals);
+            await db.SaveChangesAsync();
+
+            await Subject.Sync();
+
+            await GoogleSheetsServices.Received(1).UpdateSheet(
+                Arg.Is<string>(s => s.StartsWith(nameof(UserVital))), 
+                Arg.Is<IList<IList<object>>>(l => l.Count == 11));
+        }
+
+        [Fact]
+        public async Task Users_Should_BeOne()
+        {
+            Db.Users.Should().HaveCount(1);
+        }
+
+        [Fact]
+        public async Task SyncDataTwice_Vital_LoggedInUser_ShouldNotFail()
+        {
+            var db = Db;
+
+            var user = await AuthenticationService.GetUserAsync();
+
+            var vitals = Fixture.Build<UserVital>()
+                .Without(p => p.User)
+                .With(p => p.UserId, user.Id)
+                .CreateMany(10);
+
+            Db.AddRange(vitals);
+            Db.SaveChanges();
+
+            List<List<string>> data = [
+               ["Id", "UserId"],
+               ];
+
+            foreach (var item in vitals)
+            {
+                data.Add([item.Id.ToString(), user.Id]);
+                data.Add([Guid.NewGuid().ToString(), Guid.NewGuid().ToString()]);
+            }
+
+            GoogleSheetsServices.GetSheetRows(nameof(UserVital)).Returns(data);
+
+            await Subject.Sync();
+            await Subject.Sync();
+
+            Db.UserVitals.Should().HaveCount(20);
         }
 
         [Fact]
@@ -85,7 +156,7 @@ namespace FitnessFox.Tests.Services
 
             GoogleSheetsServices.GetSheetRows(nameof(UserVital)).Returns(data);
 
-            await Subject.SyncDbSet<UserVital, Guid>();
+            await Subject.SyncDbSet<UserVital, Guid>(p => true, p => { });
 
             db.UserVitals.Should().HaveCount(1);
             await GoogleSheetsServices.DidNotReceive().UpdateSheet(Arg.Is<string>(s => s.StartsWith(nameof(UserVital))), Arg.Any<IList<IList<object>>>());
@@ -114,7 +185,7 @@ namespace FitnessFox.Tests.Services
 
             GoogleSheetsServices.GetSheetRows(nameof(UserVital)).Returns(data);
 
-            await Subject.SyncDbSet<UserVital, Guid>();
+            await Subject.SyncDbSet<UserVital, Guid>(p => true, p => { });
 
             db.UserVitals.Should().HaveCount(1);
 
