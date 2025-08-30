@@ -52,18 +52,17 @@
             </MudStack>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4">
-            <MudText Typo="Typo.h6">Temperature</MudText>
-            <MudNumericField Disabled=Vm.IsLoading T="float" @bind-Value="Vm.Temperature.Value" @bind-Value:after="() => Vm.Load(() => Vm.Save(Vm.Temperature))" Label="Temp"></MudNumericField>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="4">
-        <MudPaper Elevation="2" Class="pa-4">
-            <MudText Typo="Typo.h6">Water</MudText>
-            <MudNumericField Disabled=Vm.IsLoading T="float" @bind-Value="Vm.Water.Value" @bind-Value:after="() => Vm.Load(() => Vm.Save(Vm.Water))" Label="Water (fl ounces)"></MudNumericField>
-        </MudPaper>
-    </MudItem>
+    @foreach (var item in Vm.BasicVitalsDisplay)
+    {
+        var name = item.Type.GetAttribute<DisplayAttribute>()?.Name ?? item.Type.ToString();
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6">@name</MudText>
+                <MudNumericField Disabled=Vm.IsLoading T="float" @bind-Value="item.Value" @bind-Value:after="() => Vm.Load(() => Vm.Save(item))" Label="@name"></MudNumericField>
+            </MudPaper>
+        </MudItem>
+    }
+
     <MudItem xs="12" sm="6" md="4">
         <MudPaper Elevation="2" Class="pa-4">
             <MudText Typo="Typo.h6">Height</MudText>

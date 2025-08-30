@@ -13,6 +13,7 @@ namespace FitnessFox.Components
     {
         public static IServiceCollection RegisterComponentDependencies(this IServiceCollection services) 
         {
+            
             services.AddScoped<ISyncService, GoogleSyncService>();
             services.AddScoped<IGoogleSheetsServices, GoogleSheetsServices>();
             services.AddScoped<ISettingsService, SettingsService>();

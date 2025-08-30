@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using CsvHelper;
+﻿using CsvHelper;
 using CsvHelper.Configuration;
 using FitnessFox.Components.Data.Options;
 using FitnessFox.Components.Data.Settings;

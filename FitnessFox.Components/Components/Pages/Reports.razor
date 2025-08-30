@@ -12,9 +12,11 @@
     </MudItem>
 </MudGrid>
 
+@foreach (var chart in Vm.Charts)
+{
+    <MudChart LegendPosition="Position.Top" Width="100%" Height="400px" ChartType="ChartType.Line" ChartSeries="chart.Series" XAxisLabels="chart.Labels" AxisChartOptions="_axisChartOptions"></MudChart>
+}
 
-<MudChart LegendPosition="Position.Top" Width="100%" Height="400px" ChartType="ChartType.Line" ChartSeries="Vm.WeightSeries" XAxisLabels="Vm.Labels" AxisChartOptions="_axisChartOptions"></MudChart>
-<MudChart LegendPosition="Position.Top" Width="100%" Height="400px" ChartType="ChartType.Line" ChartSeries="Vm.HeartSeries" XAxisLabels="Vm.Labels" AxisChartOptions="_axisChartOptions"></MudChart>
 @code {
     private AxisChartOptions _axisChartOptions = new AxisChartOptions()
     {

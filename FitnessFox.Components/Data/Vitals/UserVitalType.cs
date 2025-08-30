@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FitnessFox.Data.Vitals
 {
     public enum UserVitalType
@@ -7,6 +9,14 @@ namespace FitnessFox.Data.Vitals
         Temperature,
         Systolic,
         Diastolic,
-        Bpm
+        Bpm,
+        [Display(Name = "Waist (In)")]
+        WaistIn,
+        [Display(Name = "Underbust (In)")]
+        UnderbustIn,
+        [Display(Name = "Standing Bust (In)")]
+        StandingBustIn,
+        [Display(Name = "Leaning Bust (In)")]
+        LeaningBustIn,
     }
 }

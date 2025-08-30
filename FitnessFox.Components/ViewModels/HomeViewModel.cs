@@ -41,12 +41,14 @@ namespace FitnessFox.Components.ViewModels
         public UserVital Systolic { get; set; } = new();
         public UserVital Diastolic { get; set; } = new();
         public UserVital Bpm { get; set; } = new();
-        public UserVital Temperature { get; set; } = new();
-        public UserVital Water { get; set; } = new();
+        //public UserVital Temperature { get; set; } = new();
+        //public UserVital Water { get; set; } = new();
 
         public ApplicationUser User { get; set; } = new();
 
         public UserGoal? WeightGoal { get; set; }
+
+        public List<UserVital> BasicVitalsDisplay { get; set; } = new();
 
         public override async Task OnInitializedAsync()
         {
@@ -107,8 +109,13 @@ namespace FitnessFox.Components.ViewModels
             Systolic = getType(UserVitalType.Systolic);
             Diastolic = getType(UserVitalType.Diastolic);
             Bpm = getType(UserVitalType.Bpm);
-            Temperature = getType(UserVitalType.Temperature);
-            Water = getType(UserVitalType.Water);
+
+            BasicVitalsDisplay.Add(getType(UserVitalType.Temperature));
+            BasicVitalsDisplay.Add(getType(UserVitalType.Water));
+            BasicVitalsDisplay.Add(getType(UserVitalType.WaistIn));
+            BasicVitalsDisplay.Add(getType(UserVitalType.UnderbustIn));
+            BasicVitalsDisplay.Add(getType(UserVitalType.StandingBustIn));
+            BasicVitalsDisplay.Add(getType(UserVitalType.LeaningBustIn));
         }
 
         public async Task SetDate(DateTime? date)

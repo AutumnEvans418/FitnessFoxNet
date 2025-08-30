@@ -1,5 +1,7 @@
 ﻿using FitnessFox.Components.Services;
 using FitnessFox.Data;
+using FitnessFox.Data.Foods;
+using FitnessFox.Data.Goals;
 using FitnessFox.Data.Vitals;
 using FitnessFox.Services;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +15,12 @@ using System.Threading.Tasks;
 
 namespace FitnessFox.Components.ViewModels
 {
+    public class ChartViewModel
+    {
+        public List<ChartSeries> Series { get; set; } = new();
+        public string[] Labels { get; set; } = [];
+    }
+
     public class ReportsViewModel : ViewModelBase
     {
         private readonly IAuthenticationService authenticationService;
@@ -32,17 +40,17 @@ namespace FitnessFox.Components.ViewModels
 
         public DateTime? From { get; set; } = DateTime.Now.Date.AddDays(-29);
         public DateTime? To { get; set; } = DateTime.Now.Date;
-        public List<ChartSeries> WeightSeries { get; set; } = [];
 
-        public List<ChartSeries> HeartSeries { get; set; } = [];
-
-        public string[] Labels { get; set; } = [];
+        public List<ChartViewModel> Charts { get; set; } = new();
 
         public override async Task OnInitializedAsync()
         {
             await Load(Refresh);
         }
 
+        public List<UserVital> Vitals { get; set; } = new();
+        public List<UserGoal> Goals { get; set; } = new();
+        public List<UserMeal> Meals { get; set; } = new();
         public async Task Refresh()
         {
             var user = await authenticationService.GetUserAsync();
@@ -56,61 +64,91 @@ namespace FitnessFox.Components.ViewModels
                 return;
             }
 
-            WeightSeries = [];
-            HeartSeries = [];
-            Labels = new string[WeightSeries.Count];
+            Charts.Clear();
 
-            var vitals = await dbContext
+            Vitals = await dbContext
                 .UserVitals
                 .Where(u => u.UserId == user.Id && u.Date >= From && u.Date <= To)
                 .ToListAsync();
 
-            var series = CreateSeries(vitals, From, To, [UserVitalType.Weight]);
-
-            WeightSeries = series.series;
-            Labels = series.labels;
-
-            var series2 = CreateSeries(vitals, From, To, [UserVitalType.Systolic, UserVitalType.Diastolic, UserVitalType.Bpm]);
-
-            HeartSeries = series2.series;
-
-            var goal = await dbContext
+            Goals = await dbContext
                 .UserGoals
-                .Where(u => u.UserId == user.Id && u.Type == FitnessFox.Data.Goals.UserGoalType.WeightLbs)
-                .FirstOrDefaultAsync();
+                .Where(u => u.UserId == user.Id)
+                .ToListAsync();
 
-            if (goal != null)
-            {
-                var name = goal.Type.GetAttribute<DisplayAttribute>()?.Name ?? goal.Type.ToString();
-                WeightSeries.Add(new ChartSeries
-                {
-                    Name = name,
-                    Data = Enumerable.Range(0, Labels.Length).Select(d => (double)goal.Value).ToArray()
-                });
-            }
+            Meals = await dbContext
+                .UserMeals
+                .Where(u => u.UserId == user.Id && u.Date >= From && u.Date <= To)
+                .ToListAsync();
+
+            CreateSeries([UserVitalType.Weight], [UserGoalType.WeightLbs]);
+            CreateSeries([UserVitalType.Systolic, UserVitalType.Diastolic, UserVitalType.Bpm], []);
+            CreateSeries([UserVitalType.WaistIn, UserVitalType.UnderbustIn, UserVitalType.StandingBustIn, UserVitalType.LeaningBustIn], []);
+
+            CreateFoodSeries(u => [(u.Calories, "Calories")], [UserGoalType.Calories]);
         }
 
-        private static (List<ChartSeries> series, string[] labels) CreateSeries(
-            List<UserVital> vitals, 
-            DateTime? from,
-            DateTime? to,
-            UserVitalType[] vitalsToDisplay)
+        private void CreateFoodSeries(Func<UserMeal, (float, string)[]> props, UserGoalType[] goalTypes)
         {
-            List<ChartSeries> chartSeries = [];
+            var filtered = Meals.GroupBy(g => g.Date.Date).OrderBy(g => g.Key).ToList();
 
-            var filtered = vitals.Where(v => vitalsToDisplay.Contains(v.Type)).GroupBy(g => g.Date.Date).OrderBy(g => g.Key).ToList();
+            if (filtered.Count == 0)
+                return;
 
             var binSize = Math.Max(1, filtered.Count / 7);
 
-            string[] labels = filtered.Select((s,i) => i % binSize == 0 ? s.Key.ToString("MMM d") : "").ToArray();
+            string[] labels = filtered.Select((s, i) => i % binSize == 0 ? s.Key.ToString("MMM d") : "").ToArray();
+
+            var count = props(filtered.First().First()).Length;
+
+            List<ChartSeries> chartSeries = new(count);
+
+            for (int i = 0; i < filtered.Count; i++)
+            {
+                var item = filtered[i].Select(props);
+
+                for (int j = 0; j < count; j++)
+                {
+                    chartSeries[j] ??= new ChartSeries()
+                    {
+                        Data = new double[labels.Length],
+                        Name = item.FirstOrDefault()?[j].Item2 ?? "NA",
+                        ShowDataMarkers = true,
+                    };
+                    var data = item.DefaultIfEmpty().Average(p => p?[j].Item1 ?? 0);
+                    chartSeries[j].Data[i] = data;
+                }
+            }
+
+            AddGoals(goalTypes, chartSeries, labels);
+
+            Charts.Add(new ChartViewModel
+            {
+                Labels = labels,
+                Series = chartSeries
+            });
+        }
+
+        private void CreateSeries(
+            UserVitalType[] vitalsToDisplay,
+            UserGoalType[] goalTypes)
+        {
+            List<ChartSeries> chartSeries = [];
+
+            var filtered = Vitals.Where(v => vitalsToDisplay.Contains(v.Type)).GroupBy(g => g.Date.Date).OrderBy(g => g.Key).ToList();
+
+            var binSize = Math.Max(1, filtered.Count / 7);
+
+            string[] labels = filtered.Select((s, i) => i % binSize == 0 ? s.Key.ToString("MMM d") : "").ToArray();
 
             foreach (var type in vitalsToDisplay)
             {
                 var series = new ChartSeries();
                 chartSeries.Add(series);
+                var name = type.GetAttribute<DisplayAttribute>()?.Name ?? type.ToString();
 
                 series.Data = new double[labels.Length];
-                series.Name = type.ToString();
+                series.Name = name;
                 series.ShowDataMarkers = true;
 
                 for (int i = 0; i < filtered.Count; i++)
@@ -121,7 +159,31 @@ namespace FitnessFox.Components.ViewModels
                 }
             }
 
-            return (chartSeries, labels);
+            AddGoals(goalTypes, chartSeries, labels);
+
+            Charts.Add(new ChartViewModel
+            {
+                Labels = labels,
+                Series = chartSeries
+            });
+        }
+
+        private void AddGoals(UserGoalType[] goalTypes, List<ChartSeries> chartSeries, string[] labels)
+        {
+            var goals = Goals.Where(g => goalTypes.Contains(g.Type)).ToList();
+
+            foreach (var goal in goals)
+            {
+                if (goal != null)
+                {
+                    var name = goal.Type.GetAttribute<DisplayAttribute>()?.Name ?? goal.Type.ToString();
+                    chartSeries.Add(new ChartSeries
+                    {
+                        Name = name,
+                        Data = Enumerable.Range(0, labels.Length).Select(d => (double)goal.Value).ToArray()
+                    });
+                }
+            }
         }
     }
 }

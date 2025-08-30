@@ -20,7 +20,7 @@ namespace FitnessFox.Tests.ViewModels
         {
             await Subject.Refresh();
 
-            Subject.WeightSeries.Count.Should().Be(1);
+            Subject.Charts[0].Series.Count.Should().Be(1);
         }
 
         [Fact]
@@ -42,7 +42,7 @@ namespace FitnessFox.Tests.ViewModels
 
             await Subject.Refresh();
 
-            Subject.WeightSeries[0].Data.Should().HaveCount(1);
+            Subject.Charts[0].Series[0].Data.Should().HaveCount(1);
         }
 
         [Fact]
@@ -69,11 +69,11 @@ namespace FitnessFox.Tests.ViewModels
 
             await Subject.Refresh();
 
-            Subject.Labels.Should().HaveCount(7);
-            Subject.WeightSeries[0].Data.Should().HaveCount(7);
+            Subject.Charts[0].Labels.Should().HaveCount(7);
+            Subject.Charts[0].Series[0].Data.Should().HaveCount(7);
 
-            Subject.Labels.First().Should().Be("Jan 1");
-            Subject.Labels.Last().Should().Be("Jan 7");
+            Subject.Charts[0].Labels.First().Should().Be("Jan 1");
+            Subject.Charts[0].Labels.Last().Should().Be("Jan 7");
         }
 
         [Fact]
@@ -100,7 +100,7 @@ namespace FitnessFox.Tests.ViewModels
 
             await Subject.Refresh();
 
-            Subject.WeightSeries.First().Data.Average().Should().Be(1);
+            Subject.Charts[0].Series.First().Data.Average().Should().Be(1);
         }
 
         [Fact]
@@ -137,7 +137,7 @@ namespace FitnessFox.Tests.ViewModels
 
             await Subject.Refresh();
 
-            Subject.WeightSeries.First().Data.Average().Should().Be(5);
+            Subject.Charts[0].Series.First().Data.Average().Should().Be(5);
         }
 
         [Fact]
@@ -167,9 +167,9 @@ namespace FitnessFox.Tests.ViewModels
 
             await Subject.Refresh();
 
-            Subject.WeightSeries.Should().HaveCount(2);
+            Subject.Charts[0].Series.Should().HaveCount(2);
 
-            Subject.WeightSeries.Last().Data.Average().Should().Be(10);
+            Subject.Charts[0].Series.Last().Data.Average().Should().Be(10);
 
         }
     }
