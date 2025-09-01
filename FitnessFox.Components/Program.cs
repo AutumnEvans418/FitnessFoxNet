@@ -19,6 +19,7 @@ namespace FitnessFox.Components
             services.AddScoped<ISettingsService, SettingsService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<ILoggingService, LoggingService>();
+            services.AddScoped<IFakeDataGenerator, FakeDataGenerator>();
 
             services.AddScoped<ILoadingService, LoadingService>();
 

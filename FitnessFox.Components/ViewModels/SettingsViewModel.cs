@@ -13,6 +13,7 @@ namespace FitnessFox.Components.ViewModels
         private readonly ISnackbar snackbar;
         private readonly ApplicationDbContext dbContext;
         private readonly NavigationManager nav;
+        private readonly IFakeDataGenerator fakeDataGenerator;
 
         public SettingsViewModel(
             IDialogService mudDialogInstance,
@@ -22,7 +23,8 @@ namespace FitnessFox.Components.ViewModels
             ISyncService googleSyncService,
             ISnackbar snackbar,
             ApplicationDbContext dbContext,
-            NavigationManager nav)
+            NavigationManager nav,
+            IFakeDataGenerator fakeDataGenerator)
             : base(mudDialogInstance, loggingService, loadingService)
         {
             this.settingsService = settingsService;
@@ -30,6 +32,7 @@ namespace FitnessFox.Components.ViewModels
             this.snackbar = snackbar;
             this.dbContext = dbContext;
             this.nav = nav;
+            this.fakeDataGenerator = fakeDataGenerator;
         }
 
         public List<SettingKey> Keys { get; set; } = Enum.GetValues<SettingKey>().ToList();
@@ -64,6 +67,16 @@ namespace FitnessFox.Components.ViewModels
             {
                 dbContext.Database.EnsureDeleted();
                 dbContext.Database.EnsureCreated();
+                nav.NavigateTo(nav.Uri, true);
+            }
+        }
+
+        public async Task SeedDb()
+        {
+            var result = await dialogService.ShowMessageBox("Confirm", "Are you sure you want to seed the db with fake data?", "Yes", "No");
+            if (result == true)
+            {
+                await fakeDataGenerator.SeedData();
                 nav.NavigateTo(nav.Uri, true);
             }
         }

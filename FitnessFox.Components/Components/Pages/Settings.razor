@@ -17,6 +17,7 @@
 <MudText>To sync your local data to Google sheets, add the sheet id (in the url) and share the sheet with this email: @googleOptions.Value.UserEmail</MudText>
 <MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.Sync)">Sync to Google</MudButton>
 <MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.ClearDb)">Clear Database</MudButton>
+<MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.SeedDb)">Seed Database</MudButton>
 
 <MudGrid>
     @foreach (var key in Vm.Keys.Where(k => k.GetAttribute<DisplayAttribute>() != null))

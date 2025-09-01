@@ -14,6 +14,7 @@
 
 @foreach (var chart in Vm.Charts)
 {
+    <MudText Align="Align.Center" Typo="Typo.h5" Class="mt-2">@chart.Name.ToString()</MudText>
     <MudChart LegendPosition="Position.Top" Width="100%" Height="400px" ChartType="ChartType.Line" ChartSeries="chart.Series" XAxisLabels="chart.Labels" AxisChartOptions="_axisChartOptions"></MudChart>
 }
 

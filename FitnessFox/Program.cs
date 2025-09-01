@@ -29,23 +29,14 @@ builder.Services.AddAuthentication(options =>
 
 var dbType = builder.Configuration["DatabaseType"];
 
-if(dbType == "SqlServer")
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-    builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
-    builder.Services.AddDbContext<IdentityDbContext>(options => options.UseSqlServer(connectionString));
-}
-else if(dbType == "Sqlite")
+    options.UseSqlite("Data Source=database.dat").EnableSensitiveDataLogging().EnableDetailedErrors();
+});
+builder.Services.AddDbContext<IdentityDbContext>(options =>
 {
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    {
-        options.UseSqlite("Data Source=database.dat").EnableSensitiveDataLogging().EnableDetailedErrors();
-    });
-    builder.Services.AddDbContext<IdentityDbContext>(options =>
-    {
-        options.UseSqlite("Data Source=identity.dat").EnableSensitiveDataLogging().EnableDetailedErrors();
-    });
-}
+    options.UseSqlite("Data Source=identity.dat").EnableSensitiveDataLogging().EnableDetailedErrors();
+});
 
 builder.Services.RegisterComponentDependencies();
 builder.Services.AddScoped<IFileService, FileService>();

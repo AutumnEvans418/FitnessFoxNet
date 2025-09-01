@@ -1,5 +1,6 @@
 ﻿using AutoFixture;
 using FitnessFox.Components.ViewModels;
+using FitnessFox.Data.Foods;
 using FitnessFox.Data.Vitals;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,11 @@ namespace FitnessFox.Tests.ViewModels
 {
     public class ReportsViewModelTests : DbTestBase<ReportsViewModel>
     {
+        public ReportsViewModelTests()
+        {
+            Subject.From = DateTime.Parse("2025-01-01");
+            Subject.To = DateTime.Parse("2025-01-14");
+        }
 
         [Fact]
         public async Task Refresh_Series_Should_BeEmpty()
@@ -171,6 +177,28 @@ namespace FitnessFox.Tests.ViewModels
 
             Subject.Charts[0].Series.Last().Data.Average().Should().Be(10);
 
+        }
+
+        [Fact]
+        public async Task Calories_Should_BeOnChart()
+        {
+            var user = Db.Users.First();
+
+            Db.UserMeals.Add(new UserMeal()
+            {
+                Calories = 10,
+                Date = Subject.From.GetValueOrDefault(),
+                UserId = user.Id,
+            });
+
+            Db.SaveChanges();
+
+            await Subject.Refresh();
+
+            var chart = Subject.Charts.First(p => p.Name == ChartDataType.Food);
+            
+            chart.Labels.Should().HaveCount(1);
+            chart.Series.First().Data.Average().Should().Be(10);
         }
     }
 }

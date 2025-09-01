@@ -15,8 +15,17 @@ using System.Threading.Tasks;
 
 namespace FitnessFox.Components.ViewModels
 {
+    public enum ChartDataType
+    {
+        Weight,
+        Blood,
+        Figure,
+        Food,
+    }
+
     public class ChartViewModel
     {
+        public ChartDataType Name { get; set; }
         public List<ChartSeries> Series { get; set; } = new();
         public string[] Labels { get; set; } = [];
     }
@@ -81,14 +90,16 @@ namespace FitnessFox.Components.ViewModels
                 .Where(u => u.UserId == user.Id && u.Date >= From && u.Date <= To)
                 .ToListAsync();
 
-            CreateSeries([UserVitalType.Weight], [UserGoalType.WeightLbs]);
-            CreateSeries([UserVitalType.Systolic, UserVitalType.Diastolic, UserVitalType.Bpm], []);
-            CreateSeries([UserVitalType.WaistIn, UserVitalType.UnderbustIn, UserVitalType.StandingBustIn, UserVitalType.LeaningBustIn], []);
+            CreateSeries(ChartDataType.Weight, [UserVitalType.Weight], [UserGoalType.WeightLbs]);
+            CreateSeries(ChartDataType.Blood, [UserVitalType.Systolic, UserVitalType.Diastolic, UserVitalType.Bpm], []);
+            CreateSeries(ChartDataType.Figure, [UserVitalType.WaistIn, UserVitalType.UnderbustIn, UserVitalType.StandingBustIn, UserVitalType.LeaningBustIn], []);
 
-            CreateFoodSeries(u => [(u.Calories, "Calories")], [UserGoalType.Calories]);
+            CreateFoodSeries(ChartDataType.Food, u => 
+                [(u.Calories, "Calories"), (u.Cholesterol, "Cholesterol"), (u.Sugar, "Sugar"), (u.Sodium, "Sodium"), (u.VitaminK, "VitaminK")], 
+                [UserGoalType.Calories, UserGoalType.Cholesterol, UserGoalType.Sugar, UserGoalType.Sodium, UserGoalType.VitaminK]);
         }
 
-        private void CreateFoodSeries(Func<UserMeal, (float, string)[]> props, UserGoalType[] goalTypes)
+        private void CreateFoodSeries(ChartDataType chartName, Func<UserMeal, (float, string)[]> props, UserGoalType[] goalTypes)
         {
             var filtered = Meals.GroupBy(g => g.Date.Date).OrderBy(g => g.Key).ToList();
 
@@ -101,7 +112,7 @@ namespace FitnessFox.Components.ViewModels
 
             var count = props(filtered.First().First()).Length;
 
-            List<ChartSeries> chartSeries = new(count);
+            ChartSeries[] chartSeries = new ChartSeries[count];
 
             for (int i = 0; i < filtered.Count; i++)
             {
@@ -120,16 +131,18 @@ namespace FitnessFox.Components.ViewModels
                 }
             }
 
-            AddGoals(goalTypes, chartSeries, labels);
+            AddGoals(goalTypes, chartSeries.ToList(), labels);
 
             Charts.Add(new ChartViewModel
             {
                 Labels = labels,
-                Series = chartSeries
+                Series = chartSeries.ToList(),
+                Name = chartName,
             });
         }
 
         private void CreateSeries(
+            ChartDataType chartName,
             UserVitalType[] vitalsToDisplay,
             UserGoalType[] goalTypes)
         {
@@ -164,7 +177,8 @@ namespace FitnessFox.Components.ViewModels
             Charts.Add(new ChartViewModel
             {
                 Labels = labels,
-                Series = chartSeries
+                Series = chartSeries,
+                Name = chartName,
             });
         }
 

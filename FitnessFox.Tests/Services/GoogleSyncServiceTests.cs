@@ -13,7 +13,6 @@ using NSubstitute;
 
 namespace FitnessFox.Tests.Services
 {
-    
     public class GoogleSyncServiceTests : DbTestBase<GoogleSyncService>
     {
 
