@@ -23,11 +23,14 @@ jobs:
         with:
           dotnet-version: '8.x'
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Build Website
+        run: dotnet build FitnessFox\FitnessFox.csproj --configuration Release 
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      - name: Run Tests
+        run: dotnet test FitnessFox.Tests\FitnessFox.Tests.csproj --configuration Release --no-build --verbosity normal
+
+      - name: Publish Website
+        run: dotnet publish FitnessFox\FitnessFox.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

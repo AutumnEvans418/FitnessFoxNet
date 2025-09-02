@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 @* Required *@
-<MudThemeProvider />
+<MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="_isDarkMode" Theme="theme" />
 <MudPopoverProvider />
 
 @* Needed for dialogs *@
@@ -13,14 +13,17 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.h5" Class="ml-3">Fitness Fox 🦊</MudText>
+        <MudLink Href="/">
+            <MudText Typo="Typo.h5" Class="ml-3 mr-3">Fitness Fox</MudText>
+        </MudLink> 
+        <MudImage Src="_content/FitnessFox.Components/fox-logo.svg" title="logo" Alt="Logo" Width="32" Height="32"></MudImage>
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen">
         <NavMenu></NavMenu>
     </MudDrawer>
-    <MudMainContent>
+    <MudMainContent >
         <MudContainer>
             <GlobalProgressBar></GlobalProgressBar>
             @Body
@@ -34,4 +37,35 @@
     {
         _drawerOpen = !_drawerOpen;
     }
+
+    MudTheme theme = new()
+    {
+          PaletteDark = new()
+          {
+            Primary = "#ffa04d",
+            PrimaryContrastText = "#ffffff",
+            PrimaryDarken = "#ff8400",
+            PrimaryLighten = "#ffc999",
+          },
+          PaletteLight = new()
+          {
+            Primary = "#ffa04d",
+            PrimaryContrastText = "#ffffff",
+            PrimaryDarken = "#ff8400",
+            PrimaryLighten = "#ffc999",
+          }
+    };
+
+    private bool _isDarkMode;
+    private MudThemeProvider _mudThemeProvider;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isDarkMode = await _mudThemeProvider.GetSystemDarkModeAsync();
+            StateHasChanged();
+        }
+    }
+    
 }
