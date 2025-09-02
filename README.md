@@ -1,5 +1,5 @@
 # Fitness Fox
-A local decentralized fitness app built in Blazor .NET 8 that supports iOS, Android, and Web.
+A local, crossplatform, and secure fitness app built in Blazor .NET 8 that supports iOS, Android, and Web.
 
 > This project is still a work in progress and likely contains many bugs.
 
