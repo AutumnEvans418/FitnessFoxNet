@@ -1,4 +1,5 @@
 ﻿using FitnessFox.Components;
+using FitnessFox.Components.Data.Options;
 using FitnessFox.Components.Services;
 using FitnessFox.Components.ViewModels;
 using FitnessFox.Data;
@@ -38,8 +39,12 @@ namespace FitnessFox.Mobile
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
-
 #endif
+            builder.Services.Configure<DatabaseOptions>(o =>
+            {
+                o.ShowSeedDatabase = true;
+                o.ShowClearDatabase = true;
+            });
 
             var app = builder.Build();
 
@@ -48,6 +53,8 @@ namespace FitnessFox.Mobile
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             //db.Database.EnsureDeleted();
             db.Database.EnsureCreated();
+
+
 
             return app;
         }

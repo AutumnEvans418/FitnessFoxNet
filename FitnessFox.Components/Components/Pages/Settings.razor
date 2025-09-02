@@ -4,20 +4,23 @@
 @using FitnessFox.Components.Services
 @using FitnessFox.Components.ViewModels
 @using Microsoft.Extensions.Options
-@inject ISyncService googleSyncService
-@inject ISettingsService settingsService
 @inject IOptions<GoogleOptions> googleOptions
-@inject ISnackbar Snackbar
-@inject IDialogService dialogService
-@inject ApplicationDbContext applicationDbContext
-@inject NavigationManager nav
+@inject IOptions<DatabaseOptions> databaseOptions
 @inherits ViewModelComponentBase<SettingsViewModel>
 <h3>Settings</h3>
 
 <MudText>To sync your local data to Google sheets, add the sheet id (in the url) and share the sheet with this email: @googleOptions.Value.UserEmail</MudText>
+
 <MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.Sync)">Sync to Google</MudButton>
-<MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.ClearDb)">Clear Database</MudButton>
-<MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.SeedDb)">Seed Database</MudButton>
+
+@if (databaseOptions.Value.ShowClearDatabase)
+{
+    <MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.ClearDb)">Clear Database</MudButton>
+}
+@if (databaseOptions.Value.ShowSeedDatabase)
+{
+    <MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.SeedDb)">Seed Database</MudButton>
+}
 
 <MudGrid>
     @foreach (var key in Vm.Keys.Where(k => k.GetAttribute<DisplayAttribute>() != null))
@@ -46,16 +49,15 @@
                                  Label="@name?.Name"
                                  ValueChanged="a => Vm.Load(() => Vm.SetValue(key, a))"
                                  Value="@(Vm.KeyValues.ContainsKey(key.ToString()) ? Vm.KeyValues[key.ToString()].GetValue<bool>() : false)">
-                                 
+
                     </MudCheckBox>
                 }
                 else if (name?.ResourceType == typeof(DateTime))
                 {
-                    <MudDatePicker
-                        Disabled="Vm.IsLoading"
-                        Label="@name?.Name"
-                        Date="@(Vm.KeyValues.ContainsKey(key.ToString()) ? Vm.KeyValues[key.ToString()].GetValue<DateTime>() : DateTime.MinValue)"
-                        DateChanged="a => Vm.Load(() => Vm.SetValue(key, a))">
+                    <MudDatePicker Disabled="Vm.IsLoading"
+                                   Label="@name?.Name"
+                                   Date="@(Vm.KeyValues.ContainsKey(key.ToString()) ? Vm.KeyValues[key.ToString()].GetValue<DateTime>() : DateTime.MinValue)"
+                                   DateChanged="a => Vm.Load(() => Vm.SetValue(key, a))">
                     </MudDatePicker>
                 }
 
