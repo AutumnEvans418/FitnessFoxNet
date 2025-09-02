@@ -188,7 +188,7 @@ namespace FitnessFox.Tests.ViewModels
             Db.UserMeals.Add(new UserMeal()
             {
                 Calories = 10,
-                Date = Subject.From.GetValueOrDefault(),
+                Date = Subject.From.GetValueOrDefault().ToDateOnly(),
                 UserId = user.Id,
             });
 

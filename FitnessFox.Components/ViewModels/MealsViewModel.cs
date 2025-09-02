@@ -2,6 +2,7 @@
 using FitnessFox.Data;
 using FitnessFox.Data.Foods;
 using FitnessFox.Data.Goals;
+using FitnessFox.Services;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 
@@ -44,13 +45,13 @@ namespace FitnessFox.Components.ViewModels
 
             User = user;
 
-            var currentDate = CurrentDate.GetValueOrDefault().Date;
+            var currentDate = CurrentDate.GetValueOrDefault().Date.ToDateOnly();
 
             Goals = await dbContext.UserGoals.Where(u => u.UserId == user.Id).ToListAsync();
 
             UserMeals = await dbContext
                 .UserMeals
-                .Where(u => u.UserId == user.Id && u.Date.Date == currentDate)
+                .Where(u => u.UserId == user.Id && u.Date == currentDate)
                 .Include(u => u.Food)
                 .Include(u => u.Recipe)
                 .OrderBy(p => p.Type)
@@ -67,7 +68,7 @@ namespace FitnessFox.Components.ViewModels
         {
             var meal = new UserMeal
             {
-                Date = CurrentDate.GetValueOrDefault(),
+                Date = CurrentDate.GetValueOrDefault().ToDateOnly(),
                 UserId = User.Id,
                 Type = type,
             };

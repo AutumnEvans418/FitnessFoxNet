@@ -2,6 +2,7 @@
 using FitnessFox.Data;
 using FitnessFox.Data.Foods;
 using FitnessFox.Data.Vitals;
+using FitnessFox.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -107,7 +108,7 @@ namespace FitnessFox.Components.Services
                 .RuleFor(f => f.Id, f => Guid.Empty)
                 .RuleFor(f => f.DateCreated, f => DateTime.Now)
                 .RuleFor(f => f.DateModified, f => DateTime.Now)
-                .RuleFor(f => f.Date, f => f.Date.Between(DateTime.Now.AddDays(-7), date))
+                .RuleFor(f => f.Date, f => f.Date.Between(DateTime.Now.AddDays(-7), date).ToDateOnly())
                 .RuleFor(f => f.UserId, f => user?.Id)
                 .RuleFor(f => f.User, f => null)
                 .RuleFor(f => f.Type, f => f.PickRandom<UserMealType>())

@@ -90,7 +90,7 @@ namespace FitnessFox.Components.ViewModels
 
             Meals = await dbContext
                 .UserMeals
-                .Where(u => u.UserId == user.Id && u.Date >= From && u.Date <= To)
+                .Where(u => u.UserId == user.Id && u.Date >= dateOnlyFrom && u.Date <= dateOnlyTo)
                 .ToListAsync();
 
             CreateSeries(ChartDataType.Weight, [UserVitalType.Weight], [UserGoalType.WeightLbs]);
@@ -104,7 +104,7 @@ namespace FitnessFox.Components.ViewModels
 
         private void CreateFoodSeries(ChartDataType chartName, Func<UserMeal, (float, string)[]> props, UserGoalType[] goalTypes)
         {
-            var filtered = Meals.GroupBy(g => g.Date.Date).OrderBy(g => g.Key).ToList();
+            var filtered = Meals.GroupBy(g => g.Date).OrderBy(g => g.Key).ToList();
 
             if (filtered.Count == 0)
                 return;
