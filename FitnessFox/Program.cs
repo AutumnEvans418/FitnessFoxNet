@@ -55,9 +55,16 @@ var app = builder.Build();
 using var scope = app.Services.CreateScope();
 
 var idDb = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
-await idDb.Database.EnsureCreatedAsync();
-
 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+var clearDb = builder.Configuration.GetValue<bool>("ClearDatabaseOnStartup");
+
+if (clearDb)
+{
+    await idDb.Database.EnsureDeletedAsync();
+    await db.Database.EnsureDeletedAsync();
+}
+await idDb.Database.EnsureCreatedAsync();
 await db.Database.EnsureCreatedAsync();
 
 // Configure the HTTP request pipeline.

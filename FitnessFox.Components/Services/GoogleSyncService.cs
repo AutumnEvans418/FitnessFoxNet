@@ -50,7 +50,6 @@ namespace FitnessFox.Components.Services
                 nameof(UserMeal),
                 nameof(UserVital),
                 nameof(UserGoal),
-                nameof(UserSetting)
                 ];
 
             await googleSheetsServices.LoadSheet();
@@ -69,7 +68,6 @@ namespace FitnessFox.Components.Services
             await SyncDbSet<UserMeal, Guid>(u => u.UserId == user.Id, a => a.UserId = user.Id);
             await SyncDbSet<UserVital, Guid>(u => u.UserId == user.Id, a => a.UserId = user.Id);
             await SyncDbSet<UserGoal, Guid>(u => u.UserId == user.Id, a => a.UserId = user.Id);
-            await SyncDbSet<UserSetting, string>(u => u.UserId == user.Id, a => a.UserId = user.Id);
         }
 
         public async Task<List<T>> GetData<T>() where T : class
