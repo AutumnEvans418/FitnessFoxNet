@@ -84,11 +84,12 @@ namespace FitnessFox.Components.ViewModels
 
             User = user;
 
-            var currentDate = CurrentDate.GetValueOrDefault().Date;
+            var currentDate = DateOnly.FromDateTime(CurrentDate.GetValueOrDefault().Date);
 
             Vitals = await dbContext.UserVitals
                 .Where(u => u.User.Id == user.Id)
-                .Where(u => u.Date.Date == currentDate)
+                .Where(u => u.Date == currentDate)
+                .OrderBy(u => u.Id)
                 .ToListAsync();
 
             var goals = await dbContext.UserGoals.Where(u => u.UserId == user.Id).ToListAsync();
@@ -110,6 +111,7 @@ namespace FitnessFox.Components.ViewModels
             Diastolic = getType(UserVitalType.Diastolic);
             Bpm = getType(UserVitalType.Bpm);
 
+            BasicVitalsDisplay.Clear();
             BasicVitalsDisplay.Add(getType(UserVitalType.Temperature));
             BasicVitalsDisplay.Add(getType(UserVitalType.Water));
             BasicVitalsDisplay.Add(getType(UserVitalType.WaistIn));

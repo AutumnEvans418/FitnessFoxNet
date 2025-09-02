@@ -44,11 +44,12 @@ namespace FitnessFox.Components.ViewModels.Foods
         {
             if (Id != null)
             {
+                var id = Guid.Parse(Id);
                 Model = await dbContext
                     .Recipes
                     .Include(r => r.Foods)
                     .ThenInclude(r => r.Food)
-                    .FirstAsync(f => f.Id.ToString() == Id);
+                    .FirstAsync(f => f.Id == id);
             }
             Model ??= new();
         }

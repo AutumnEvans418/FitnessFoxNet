@@ -1,4 +1,6 @@
-﻿using FitnessFox.Components.ViewModels;
+﻿using AutoFixture;
+using FitnessFox.Components.Services;
+using FitnessFox.Components.ViewModels;
 using FluentAssertions;
 using System;
 using System.Collections.Generic;
@@ -8,6 +10,45 @@ using System.Threading.Tasks;
 
 namespace FitnessFox.Tests.ViewModels
 {
+    public class HomeViewModelSeededTests : DbTestBase<HomeViewModel>
+    {
+        public HomeViewModelSeededTests()
+        {
+            var seed = Fixture.Create<FakeDataGenerator>();
+            seed.Seed = 1;
+            seed.SeedData().Wait();
+        }
+
+        [Fact]
+        public async Task Initialized_Should_SetCurrentDate()
+        {
+            await Subject.OnInitializedAsync();
+            Subject.CurrentDate.Should().BeCloseTo(DateTime.Now, TimeSpan.FromSeconds(1));
+        }
+
+        [Fact]
+        public async Task Initialized_Should_SetWeight()
+        {
+            await Subject.OnInitializedAsync();
+            Subject.Weight.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task StandardVitals_Should_HaveCount()
+        {
+            await Subject.OnInitializedAsync();
+            Subject.BasicVitalsDisplay.Should().HaveCount(6);
+        }
+
+        [Fact]
+        public async Task ChangeDate_StandardVitals_Should_HaveCount()
+        {
+            await Subject.OnInitializedAsync();
+            await Subject.SetDate(Subject.CurrentDate.Value.AddDays(-1));
+            Subject.BasicVitalsDisplay.Should().HaveCount(6);
+        }
+    }
+
     public class HomeViewModelTests : DbTestBase<HomeViewModel>
     {
         [Fact]
@@ -36,7 +77,7 @@ namespace FitnessFox.Tests.ViewModels
             {
                 User = user!,
                 Type = Data.Vitals.UserVitalType.Weight,
-                Date = Subject.CurrentDate.GetValueOrDefault(),
+                Date = DateOnly.FromDateTime(Subject.CurrentDate.GetValueOrDefault()),
             });
             Db.SaveChanges();
 

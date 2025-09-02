@@ -24,6 +24,8 @@ namespace FitnessFox.Components.Services
             this.authenticationService = authenticationService;
         }
 
+        public int Seed { get; set; }
+
         public async Task SeedData()
         {
             var user = await authenticationService.GetUserAsync();
@@ -65,6 +67,7 @@ namespace FitnessFox.Components.Services
                 .RuleFor(f => f.Calcium, f => f.Random.Float(0, 2000))
                 .RuleFor(f => f.Iron, f => f.Random.Float(0, 2000))
                 .RuleFor(f => f.VitaminK, f => f.Random.Float(0, 2000))
+                .UseSeed(Seed)
                 ;
 
             var foods = foodGen.Generate(20).ToList();
@@ -80,6 +83,7 @@ namespace FitnessFox.Components.Services
                 .RuleFor(f => f.Food, f => f.PickRandom(foods))
                 .RuleFor(f => f.DateCreated, f => DateTime.Now)
                 .RuleFor(f => f.DateModified, f => DateTime.Now)
+                .UseSeed(Seed)
                 .StrictMode(true);
 
             var recipeGen = new Faker<Recipe>()
@@ -92,6 +96,7 @@ namespace FitnessFox.Components.Services
                 .RuleFor(f => f.User, f => null)
                 .RuleFor(f => f.Foods, f => recipeFoodGen.GenerateBetween(1, 10).ToList())
                 .FinishWith((f, a) => a.SetNutrients())
+                .UseSeed(Seed)
                 .StrictMode(false);
 
             var recipes = recipeGen.Generate(20).ToList();
@@ -109,6 +114,9 @@ namespace FitnessFox.Components.Services
                 .RuleFor(f => f.Servings, f => f.Random.Int(1, 10))
                 .RuleFor(f => f.MealItem, f => f.PickRandom(foods.OfType<Nutrients>().Union(recipes)))
                 .FinishWith((f, a) => a.SetNutrients())
+                .UseSeed(Seed)
+
+
                 .StrictMode(false);
 
             var userMeals = userMealGen.Generate(20).ToList();
@@ -119,11 +127,13 @@ namespace FitnessFox.Components.Services
                 .RuleFor(f => f.Id, f => Guid.Empty)
                 .RuleFor(f => f.UserId, f => user?.Id)
                 .RuleFor(f => f.User, f => null)
-                .RuleFor(f => f.Date, f => f.Date.Between(DateTime.Now.AddDays(-7), date))
+                .RuleFor(f => f.Date, f => DateOnly.FromDateTime(f.Date.Between(DateTime.Now.AddDays(-7), date)))
                 .RuleFor(f => f.DateCreated, f => DateTime.Now)
                 .RuleFor(f => f.DateModified, f => DateTime.Now)
                 .RuleFor(f => f.Type, f => f.PickRandom<UserVitalType>())
                 .RuleFor(f => f.Value, f => f.Random.Float(1, 200))
+                .UseSeed(Seed)
+
                 .StrictMode(true);
 
             var vitals = userVitalGen.Generate(20).ToList();

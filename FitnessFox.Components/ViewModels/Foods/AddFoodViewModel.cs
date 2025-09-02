@@ -48,7 +48,8 @@ namespace FitnessFox.Components.ViewModels.Foods
         {
             if (Id != null)
             {
-                Model = await dbContext.Foods.FirstAsync(f => f.Id.ToString() == Id);
+                var guid = Guid.Parse(Id);
+                Model = await dbContext.Foods.FirstAsync(f => f.Id == guid);
             }
             Model ??= new();
 

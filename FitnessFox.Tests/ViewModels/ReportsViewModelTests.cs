@@ -2,6 +2,7 @@
 using FitnessFox.Components.ViewModels;
 using FitnessFox.Data.Foods;
 using FitnessFox.Data.Vitals;
+using FitnessFox.Services;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -38,7 +39,7 @@ namespace FitnessFox.Tests.ViewModels
                 .With(w => w.UserId, user.Id)
                 .Without(w => w.User)
                 .With(w => w.Type, UserVitalType.Weight)
-                .With(w => w.Date, Subject.From.GetValueOrDefault())
+                .With(w => w.Date, Subject.From.GetValueOrDefault().ToDateOnly())
                 .CreateMany(10);
 
             Db.UserVitals.AddRange(vitals);
@@ -64,7 +65,7 @@ namespace FitnessFox.Tests.ViewModels
 
                 Db.UserVitals.Add(new UserVital
                 {
-                    Date = date,
+                    Date = date.ToDateOnly(),
                     Type = UserVitalType.Weight,
                     UserId = user.Id,
                     Value = 1,
@@ -95,7 +96,7 @@ namespace FitnessFox.Tests.ViewModels
 
                 Db.UserVitals.Add(new UserVital
                 {
-                    Date = date,
+                    Date = date.ToDateOnly(),
                     Type = UserVitalType.Weight,
                     UserId = user.Id,
                     Value = 1,
@@ -122,7 +123,7 @@ namespace FitnessFox.Tests.ViewModels
 
                 Db.UserVitals.Add(new UserVital
                 {
-                    Date = date,
+                    Date = date.ToDateOnly(),
                     Type = UserVitalType.Weight,
                     UserId = user.Id,
                     Value = 3,
@@ -132,7 +133,7 @@ namespace FitnessFox.Tests.ViewModels
 
                 Db.UserVitals.Add(new UserVital
                 {
-                    Date = date1,
+                    Date = date1.ToDateOnly(),
                     Type = UserVitalType.Weight,
                     UserId = user.Id,
                     Value = 7,
@@ -163,7 +164,7 @@ namespace FitnessFox.Tests.ViewModels
 
             Db.UserVitals.Add(new UserVital
             {
-                Date = Subject.From.GetValueOrDefault(),
+                Date = Subject.From.GetValueOrDefault().ToDateOnly(),
                 Type = UserVitalType.Weight,
                 UserId = user.Id,
                 Value = 3,

@@ -75,9 +75,12 @@ namespace FitnessFox.Components.ViewModels
 
             Charts.Clear();
 
+            var dateOnlyFrom = DateOnly.FromDateTime(From.GetValueOrDefault());
+            var dateOnlyTo = DateOnly.FromDateTime(To.GetValueOrDefault());
+
             Vitals = await dbContext
                 .UserVitals
-                .Where(u => u.UserId == user.Id && u.Date >= From && u.Date <= To)
+                .Where(u => u.UserId == user.Id && u.Date >= dateOnlyFrom && u.Date <= dateOnlyTo)
                 .ToListAsync();
 
             Goals = await dbContext
@@ -148,7 +151,7 @@ namespace FitnessFox.Components.ViewModels
         {
             List<ChartSeries> chartSeries = [];
 
-            var filtered = Vitals.Where(v => vitalsToDisplay.Contains(v.Type)).GroupBy(g => g.Date.Date).OrderBy(g => g.Key).ToList();
+            var filtered = Vitals.Where(v => vitalsToDisplay.Contains(v.Type)).GroupBy(g => g.Date).OrderBy(g => g.Key).ToList();
 
             var binSize = Math.Max(1, filtered.Count / 7);
 

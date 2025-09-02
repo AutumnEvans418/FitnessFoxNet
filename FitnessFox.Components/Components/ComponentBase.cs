@@ -21,5 +21,6 @@ namespace FitnessFox.Components.Components
             Vm.StateHasChanged = StateHasChanged;
             await Vm.OnInitializedAsync();
         }
+
     }
 }

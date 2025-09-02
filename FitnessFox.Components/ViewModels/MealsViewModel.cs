@@ -80,8 +80,12 @@ namespace FitnessFox.Components.ViewModels
 
             if (!string.IsNullOrWhiteSpace(value))
             {
-                foods = foods.Where(f => f.BrandRestaurant.Contains(value) || f.Description.Contains(value));
-                recipes = recipes.Where(f => f.Name.Contains(value));
+                var v = value.ToLower();
+
+                foods = foods.Where(f => 
+                    f.BrandRestaurant.ToLower().Contains(v) || 
+                    f.Description.ToLower().Contains(v));
+                recipes = recipes.Where(f => f.Name.ToLower().Contains(v));
             }
 
             var foodsList = await foods.Take(20).ToListAsync();

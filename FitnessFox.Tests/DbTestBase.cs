@@ -16,12 +16,15 @@ namespace FitnessFox.Tests
         public ApplicationDbContext Db { get; set; }
         public IAuthenticationService AuthenticationService { get; set; }
 
+        public ILoggingService LoggingService { get; set; }
+
         protected DbTestBase()
         {
             Connection = new SqliteConnection("Filename=:memory:");
             Connection.Open();
             var fixture = new Fixture();
             fixture.Customize(new AutoFixture.AutoNSubstitute.AutoNSubstituteCustomization());
+            fixture.Customize<DateOnly>(c => c.FromFactory<DateTime>(DateOnly.FromDateTime));
             Fixture = fixture;
             var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(Connection).Options;
             var db = new ApplicationDbContext(options);
@@ -36,6 +39,11 @@ namespace FitnessFox.Tests
 
             AuthenticationService = fixture.Freeze<IAuthenticationService>();
             AuthenticationService.GetUserAsync().Returns(user);
+
+            LoggingService = Fixture.Freeze<ILoggingService>();
+            
+            LoggingService.When(x => x.Error(Arg.Any<Exception>())).Throw(e => e.Arg<Exception>());
+
 
             Setup();
 

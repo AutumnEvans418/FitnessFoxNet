@@ -20,7 +20,7 @@ namespace FitnessFox.Mobile
 
             if (user == null)
             {
-                user = new ApplicationUser() { Id = "26218fa1-7163-4b42-aa57-51ef66515203" };
+                user = new ApplicationUser();
                 await dbContext.Users.AddAsync(user);
                 await dbContext.SaveChangesAsync();
             }

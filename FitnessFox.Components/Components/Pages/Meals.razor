@@ -30,7 +30,7 @@
                 <ChildContent>
                     <MudStack Spacing="0" AlignItems="AlignItems.Center" Justify="Justify.Center">
                         <MudText Typo="Typo.subtitle2">Calories</MudText>
-                        <MudText Typo="Typo.subtitle2">@Vm.UserMeals.Sum(s => s.Calories)/@(@goal?.Value ?? 2000)</MudText>
+                        <MudText Typo="Typo.subtitle2">@MathF.Round(Vm.UserMeals.Sum(s => s.Calories))/@(@goal?.Value ?? 2000)</MudText>
                     </MudStack>
                 </ChildContent>
             </MudProgressCircular>
@@ -61,7 +61,7 @@
                     <MudTd>@context.Type</MudTd>
                     <MudTd>@context.MealItem</MudTd>
                     <MudTd>@context.Servings (@context.ServingUnitDisplay)</MudTd>
-                    <MudTd>@context.Calories</MudTd>
+                    <MudTd>@MathF.Round(context.Calories)</MudTd>
                 </RowTemplate>
                 <RowEditingTemplate>
                     <MudTd>
@@ -77,7 +77,7 @@
                                          @bind-Value="@context.MealItem"
                                          SearchFunc="Vm.Search"
                                          Variant="Variant.Outlined"
-                                         Label="Meal"
+                                         Label="Meal" MaxItems="100"
                                          Clearable></MudAutocomplete>
                         <MudIconButton Color="Color.Primary" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Edit" Href="@($"/foods/{@context.FoodId}")"></MudIconButton>
 

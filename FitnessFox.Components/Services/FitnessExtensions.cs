@@ -21,6 +21,15 @@ namespace FitnessFox.Services
         public static float BmiWeight(float bmi, float height) => MathF.Round((bmi * MathF.Pow(height, 2)) / 703, 2);
 
         public static float Calories(float weightLoss, float caloriesBurnedWeekly) => 2000 - (weightLoss * 500) - (caloriesBurnedWeekly / 7);
-     
+        public static string? Truncate(this string? value, int maxChars)
+        {
+            if (value == null)
+                return null;
+
+            return value.Length <= maxChars ? value : value.Substring(0, maxChars) + "...";
+        }
+
+        public static DateOnly ToDateOnly(this DateTime dateTime) => DateOnly.FromDateTime(dateTime);
+        public static DateTime ToDateTime(this DateOnly dateOnly) => dateOnly.ToDateTime(TimeOnly.MinValue);
     }
 }
