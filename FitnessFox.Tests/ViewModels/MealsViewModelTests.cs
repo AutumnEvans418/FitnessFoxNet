@@ -22,6 +22,10 @@ namespace FitnessFox.Tests.ViewModels
         [Fact]
         public async Task Initialized_UserMeals_Should_NotBeEmpty()
         {
+            var meal = Db.UserMeals.First();
+
+            Subject.CurrentDate = meal.Date.ToDateTime(TimeOnly.MinValue);
+
             await Subject.OnInitializedAsync();
 
             Subject.UserMeals.Should().NotBeEmpty();
