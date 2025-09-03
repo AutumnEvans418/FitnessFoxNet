@@ -22,6 +22,7 @@ namespace FitnessFox.Components
             services.AddScoped<IFakeDataGenerator, FakeDataGenerator>();
 
             services.AddScoped<ILoadingService, LoadingService>();
+            services.AddScoped<IThemeService, ThemeService>();
 
             var viewModels = typeof(ViewModelBase).Assembly
                 .GetTypes()

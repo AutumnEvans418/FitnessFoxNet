@@ -15,7 +15,7 @@ namespace FitnessFox.Data.Foods
         public int? RecipeId { get; set; }
         public Food? Food { get; set; }
         public Recipe? Recipe { get; set; }
-        public ApplicationUser User { get; set; } = null!;
+        public ApplicationUser? User { get; set; }
 
         public string Name => Food?.Name ?? Recipe?.Name ?? "NO NAME";
 

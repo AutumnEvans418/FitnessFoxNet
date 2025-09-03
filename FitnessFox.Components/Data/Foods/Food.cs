@@ -14,7 +14,7 @@ namespace FitnessFox.Data.Foods
         public string ServingUnit { get; set; } = null!;
         public float TotalServings { get; set; } = 1;
 
-        public ApplicationUser User { get; set; } = null!;
+        public ApplicationUser? User { get; set; }
 
         public string Name => $"{BrandRestaurant} - {Description}";
 

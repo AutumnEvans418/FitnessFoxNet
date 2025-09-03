@@ -1,7 +1,8 @@
 ﻿@inherits LayoutComponentBase
-
+@inject IThemeService themeService
+@implements IDisposable
 @* Required *@
-<MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="_isDarkMode" Theme="theme" />
+<MudThemeProvider @ref="_mudThemeProvider" @bind-IsDarkMode="themeService.IsDarkMode" Theme="theme" />
 <MudPopoverProvider />
 
 @* Needed for dialogs *@
@@ -13,7 +14,7 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudLink Href="/">
+        <MudLink Href="/" Color="Color.Inherit">
             <MudText Typo="Typo.h5" Class="ml-3 mr-3">Fitness Fox</MudText>
         </MudLink> 
         <MudImage Src="_content/FitnessFox.Components/fox-logo.svg" title="logo" Alt="Logo" Width="32" Height="32"></MudImage>
@@ -53,19 +54,24 @@
             PrimaryContrastText = "#ffffff",
             PrimaryDarken = "#ff8400",
             PrimaryLighten = "#ffc999",
+            AppbarBackground = "#ffa04d",
+            AppbarText = "#ffffff"
           }
     };
 
-    private bool _isDarkMode;
-    private MudThemeProvider _mudThemeProvider;
+    private MudThemeProvider? _mudThemeProvider;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _isDarkMode = await _mudThemeProvider.GetSystemDarkModeAsync();
-            StateHasChanged();
+            themeService.OnChange += StateHasChanged;
+            themeService.IsDarkMode = await _mudThemeProvider.GetSystemDarkModeAsync();
         }
     }
-    
+
+    public void Dispose()
+    {
+        themeService.OnChange -= StateHasChanged;
+    }
 }

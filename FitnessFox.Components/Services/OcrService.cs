@@ -2,9 +2,9 @@
 {
     public class OcrService
     {
-        public async Task<string> ParseText(string path)
+        public Task<string> ParseText(string path)
         {
-            return "";
+            return Task.FromResult("");
         }
     }
 }

@@ -14,11 +14,11 @@ namespace FitnessFox.Components.ViewModels
         private readonly ApplicationDbContext dbContext;
 
         public MealsViewModel(
-            IDialogService mudDialogInstance, 
-            ILoggingService loggingService, 
+            IDialogService mudDialogInstance,
+            ILoggingService loggingService,
             ILoadingService loadingService,
             IAuthenticationService authenticationService,
-            ApplicationDbContext dbContext) 
+            ApplicationDbContext dbContext)
             : base(mudDialogInstance, loggingService, loadingService)
         {
             this.authenticationService = authenticationService;
@@ -83,8 +83,8 @@ namespace FitnessFox.Components.ViewModels
             {
                 var v = value.ToLower();
 
-                foods = foods.Where(f => 
-                    f.BrandRestaurant.ToLower().Contains(v) || 
+                foods = foods.Where(f =>
+                    f.BrandRestaurant.ToLower().Contains(v) ||
                     f.Description.ToLower().Contains(v));
                 recipes = recipes.Where(f => f.Name.ToLower().Contains(v));
             }
@@ -105,8 +105,10 @@ namespace FitnessFox.Components.ViewModels
                 }).ToList();
         }
 
-        public async Task Update(UserMeal meal)
+        public async Task Update(UserMeal? meal)
         {
+            if (meal == null)
+                return;
             meal.SetNutrients();
 
             dbContext.Update(meal);

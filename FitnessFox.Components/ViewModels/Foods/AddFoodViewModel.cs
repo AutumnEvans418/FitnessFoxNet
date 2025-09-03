@@ -76,12 +76,12 @@ namespace FitnessFox.Components.ViewModels.Foods
             await jsRuntime.InvokeVoidAsync("history.back");
         }
 
-        public async Task<IEnumerable<string>> Search(string value, CancellationToken token)
+        public Task<IEnumerable<string>> Search(string value, CancellationToken token)
         {
             if (string.IsNullOrWhiteSpace(value))
-                return Units;
+                return Task.FromResult<IEnumerable<string>>(Units);
 
-            return Units.Where(u => u.Contains(value, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            return Task.FromResult<IEnumerable<string>>(Units.Where(u => u.Contains(value, StringComparison.InvariantCultureIgnoreCase)).ToList());
         }
     }
 }

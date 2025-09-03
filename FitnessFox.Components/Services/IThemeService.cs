@@ -1,11 +1,9 @@
 ﻿
 namespace FitnessFox.Components.Services
 {
-
-    public interface ILoadingService
+    public interface IThemeService
     {
-        bool IsLoading { get; set; }
-
         event Action OnChange;
+        bool IsDarkMode { get; set; }
     }
 }

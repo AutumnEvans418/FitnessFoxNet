@@ -9,6 +9,6 @@ namespace FitnessFox.Data.Vitals
         public DateTime DateModified { get; set; }
         public UserVitalType Type { get; set; }
         public float Value { get; set; }
-        public ApplicationUser User { get; set; } = null!;
+        public ApplicationUser? User { get; set; }
     }
 }

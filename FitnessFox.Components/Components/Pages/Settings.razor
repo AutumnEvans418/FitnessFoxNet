@@ -6,6 +6,7 @@
 @using Microsoft.Extensions.Options
 @inject IOptions<GoogleOptions> googleOptions
 @inject IOptions<DatabaseOptions> databaseOptions
+@inject IThemeService themeService
 @inherits ViewModelComponentBase<SettingsViewModel>
 <h3>Settings</h3>
 
@@ -21,6 +22,8 @@
 {
     <MudButton Disabled="Vm.IsLoading" OnClick="() => Vm.Load(Vm.SeedDb)">Seed Database</MudButton>
 }
+
+<MudCheckBox @bind-Value="themeService.IsDarkMode" Label="Enable Dark Mode"></MudCheckBox>
 
 <MudGrid>
     @foreach (var key in Vm.Keys.Where(k => k.GetAttribute<DisplayAttribute>() != null))
