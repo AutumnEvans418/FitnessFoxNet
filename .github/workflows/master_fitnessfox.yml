@@ -43,9 +43,10 @@ jobs:
 
       - name: Find APK file
         id: find_apk
+        shell: pwsh
         run: |
-          apk_path=$(find FitnessFox.Mobile/publish-android -name '*.apk' | head -n 1)
-          echo "apk_path=$apk_path" >> $GITHUB_OUTPUT
+          $apk_path = Get-ChildItem -Path FitnessFox.Mobile/publish-android -Filter *.apk -Recurse | Select-Object -First 1 | ForEach-Object { $_.FullName }
+          echo "apk_path=$apk_path" >> $env:GITHUB_OUTPUT
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
