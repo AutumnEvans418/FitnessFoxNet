@@ -38,6 +38,21 @@ jobs:
           name: .net-app
           path: ${{env.DOTNET_ROOT}}/myapp
 
+      - name: Publish Android APK
+        run: dotnet publish FitnessFox.Mobile/FitnessFox.Mobile.csproj -c Release -f net8.0-android -o FitnessFox.Mobile/publish-android
+
+      - name: Find APK file
+        id: find_apk
+        run: |
+          apk_path=$(find FitnessFox.Mobile/publish-android -name '*.apk' | head -n 1)
+          echo "apk_path=$apk_path" >> $GITHUB_OUTPUT
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FitnessFox.Mobile-APK
+          path: ${{ steps.find_apk.outputs.apk_path }}
+
   deploy:
     runs-on: windows-latest
     needs: build
@@ -65,4 +80,3 @@ jobs:
           app-name: 'FitnessFox'
           slot-name: 'Production'
           package: .
-          
