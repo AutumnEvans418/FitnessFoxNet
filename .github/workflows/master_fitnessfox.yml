@@ -26,18 +26,22 @@ jobs:
       - name: Write Google Service Account JSON to FitnessFox.Mobile
         shell: pwsh
         run: |
-          $json = "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}"
+          $json = @"
+          ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          "@
           $path = "FitnessFox.Mobile/Resources/Raw/fitnessfox-467923-9857f7a3ab7e.json"
           New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null
-          $json | Out-File -FilePath $path -Encoding utf8
+          Out-File -FilePath $path -InputObject $json -Encoding utf8
 
       - name: Write Google Service Account JSON to FitnessFox
         shell: pwsh
         run: |
-          $json = "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}"
+          $json = @"
+          ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          "@          
           $path = "FitnessFox/fitnessfox-467923-9857f7a3ab7e.json"
           New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null
-          $json | Out-File -FilePath $path -Encoding utf8
+          Out-File -FilePath $path -InputObject $json -Encoding utf8
 
       - name: Build Website
         run: dotnet build FitnessFox\FitnessFox.csproj --configuration Release 
