@@ -51,10 +51,16 @@ namespace FitnessFox.Mobile
             using var scope = app.Services.CreateScope();
 
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            //db.Database.EnsureDeleted();
-            db.Database.EnsureCreated();
 
-
+            try
+            {
+                db.Database.Migrate();
+            }
+            catch (Exception)
+            {
+                db.Database.EnsureDeleted();
+                db.Database.Migrate();
+            }
 
             return app;
         }

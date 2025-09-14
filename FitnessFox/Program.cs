@@ -31,11 +31,16 @@ var dbType = builder.Configuration["DatabaseType"];
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlite("Data Source=database.dat").EnableSensitiveDataLogging().EnableDetailedErrors();
+    options.UseSqlite(builder.Configuration["ConnectionStrings:DefaultConnection"]).EnableSensitiveDataLogging().EnableDetailedErrors();
 });
 builder.Services.AddDbContext<IdentityDbContext>(options =>
 {
-    options.UseSqlite("Data Source=identity.dat").EnableSensitiveDataLogging().EnableDetailedErrors();
+    options.UseSqlite(
+        builder.Configuration["ConnectionStrings:IdentityConnection"],
+        b => b.MigrationsAssembly("FitnessFox")
+    )
+    .EnableSensitiveDataLogging()
+    .EnableDetailedErrors();
 });
 
 builder.Services.RegisterComponentDependencies();
@@ -64,8 +69,11 @@ if (clearDb)
     await idDb.Database.EnsureDeletedAsync();
     await db.Database.EnsureDeletedAsync();
 }
-await idDb.Database.EnsureCreatedAsync();
-await db.Database.EnsureCreatedAsync();
+await idDb.Database.MigrateAsync();
+await db.Database.MigrateAsync();
+
+//await idDb.Database.EnsureCreatedAsync();
+//await db.Database.EnsureCreatedAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
